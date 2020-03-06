@@ -75,3 +75,39 @@ class Scinet(nn.Module):
                 x=funct.relu(x)
         
         return x
+    
+    def train(self,observations,answers,batchSize):
+        trainSize=len(observations)
+        avgLoss=0
+        for i in tqdm(range(0,trainSize,batchSize)):
+            observationBatch=observations[i:i+batchSize].to(self.device)
+            answersBatch=answers[i:i+batchSize].to(self.device)
+            
+            self.zero_grad()
+            outputs=self(observationBatch)
+            loss=self.lossFunct(outputs,answersBatch)
+            loss.backward()
+            self.optimizer.step()
+
+            avgLoss+=loss.item()*len(observationBatch)
+
+        avgLoss/=trainSize
+        print("Training loss:",avgLoss)
+        return (avgLoss)
+    
+    def test(self,observations,answers,batchSize):
+        avgLoss=0
+        testSize=len(observations)
+        with torch.no_grad():
+            for i in tqdm(range(0,testSize,batchSize)):
+                observationBatch=observations[i:i+batchSize].to(self.device)
+                answersBatch=answers[i:i+batchSize].to(self.device)
+                outputs=self(observationBatch)
+                loss=self.lossFunct(outputs,answersBatch)
+
+                avgLoss+=loss.item()*len(observationBatch)
+
+
+        avgLoss/=testSize
+        print("Testing Loss:",avgLoss)
+        return (avgLoss)
