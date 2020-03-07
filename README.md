@@ -1,5 +1,4 @@
-# Phys 490: Final Project
-# Discovering Physical Concepts with Neural Networks
+# Phys 490 Final Project: Discovering Physical Concepts with Neural Networks
 
 # The Paper
 
