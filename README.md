@@ -10,15 +10,23 @@ The goal of this paper is to create a neural network which can learn physics. Th
 
 ![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
 
-Human learning, as illustrated in figure a) below, consists of first compressing experimental observations into a simple representation (*encoding*). At a later time, if asked a question about the physical system, one can produce an answer using the representation, withouth the original data (*decoding*). For example, the observation can be a few seconds of watching someone ski down a hill. The representation can be parameters: speed (*v*) and initial position (*x<sub>0</sub>*). The decoder implements the appropriate equation of motion using the information provided by the representation, to produce an answer.
+Human learning, as visualized in figure (a) below, consists of first compressing experimental observations into a simple representation (*encoding*). At a later time, if asked a question about the physical system, one can produce an answer using the representation, withouth the original data (*decoding*). For example, the observation can be a few seconds of watching someone ski down a hill. The representation can be parameters: speed (*v*) and initial position (*x<sub>0</sub>*). The decoder implements the appropriate equation of motion using the information provided by the representation, to produce an answer.
+
+A physicists reasoning can be broken into four parts, visualized in figure (a).
 
 # SciNet
 
-The neural network structure *SciNet* was recreated in PyTorch. As seen in image b) below, the observations are encoded as real parameters, and are fed to an encoder (a feed-forwward neural network). The encoder compresses the data into a latent representation. The question is encoded in N real parameters, which together with the latent representation are fed to the decoder network to generate an answer. 
+The neural network structure *SciNet* was recreated in PyTorch. As seen in figure (b) below, the observations are encoded as real parameters, and are fed to an encoder (a feed-forwward neural network). The encoder compresses the data into a latent representation. The question is encoded in N real parameters, which together with the latent representation are fed to the decoder network to generate an answer. 
 
+This network combines both supervised and unsupervised learning. Although the network is trained using a supervised method, we’re interested in the latent representation itself which is trained in an unsupervised way.
 
 ![scinet](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/scinet.JPG)
 
+## Recreating SciNet
+
+SciNet is a simply-connected neural network with a bottleneck and an additional input on one of its hidden layers. The question neuron is done by concatenating the output of the layer that comes before the latent layer with the question neuron(s), which is then be passed to the first layer of the decoder (done in the forward function).
+
+For the loss function and optimizer, a few choices were compared before settling with mean square loss and adam, respectively.
 
 # Requirements
 
