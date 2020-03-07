@@ -40,4 +40,3 @@ def generate_orbits(N, M, del_t):
     θ_e = φ_e
 
     return φ_e, φ_m, θ_e, θ_m
-
