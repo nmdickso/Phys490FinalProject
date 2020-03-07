@@ -2,17 +2,31 @@
 
 # The Paper
 
+The paper of interest is "Discovering physical concepts with neural networks", by R. Iten, T. Metger, H.Wilming, L. del Rio, and R. Renner (arXiv:1807.10300v1 (2018)).
+
+![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
 
 # SciNet
 
-The neural network structure *SciNet* was recreated in PyTorch. The observations are encoded as real parameters, and are fed to an encoder (a feed-forwward neural network). The encoder compresses the data into a latent representation. The question is encoded in N real parameters, which together with the latent representation are fed to the decodr network to generate an answer. 
+The neural network structure *SciNet* was recreated in PyTorch. The observations are encoded as real parameters, and are fed to an encoder (a feed-forwward neural network). The encoder compresses the data into a latent representation. The question is encoded in N real parameters, which together with the latent representation are fed to the decoder network to generate an answer. 
 
 
 ![scinet](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/scinet.JPG)
 
+
+# Requirements
+
+- Python 3.x
+- ``numpy``
+- ``matplotlib``
+- ``torch``
+- ``tqdm``
+
 # Running the Network
 
-To run the network, enter the following into the command line:
+1. Clone the repository.
+2. Import `from scinet import *`. This includes the shortcuts `nn` to the `model.py` code and `dl` to the `data_loader.py` code.
+3. Import additional files (e.g. data generation scripts) using `import scinet.my_data_generator as my_data_gen_name`.
 
-``` python main.py --param files/param.json ... etc```
+Generated data files are stored in the ``data`` directory. Saved models are stored in the ``save`` directory
 
