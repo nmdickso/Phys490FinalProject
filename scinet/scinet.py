@@ -76,15 +76,16 @@ class Scinet(nn.Module):
         
         return x
     
-    def train(self,observations,answers,batchSize):
+    def train(self,observations,questions,answers,batchSize):
         trainSize=len(observations)
         avgLoss=0
         for i in tqdm(range(0,trainSize,batchSize)):
             observationBatch=observations[i:i+batchSize].to(self.device)
             answersBatch=answers[i:i+batchSize].to(self.device)
+            questionBatch=questions[i:i+batchSize].to(self.device)
             
             self.zero_grad()
-            outputs=self(observationBatch)
+            outputs=self(observationBatch,questionBatch)
             loss=self.lossFunct(outputs,answersBatch)
             loss.backward()
             self.optimizer.step()
@@ -95,14 +96,16 @@ class Scinet(nn.Module):
         print("Training loss:",avgLoss)
         return (avgLoss)
     
-    def test(self,observations,answers,batchSize):
+    def test(self,observations,answers,questions,batchSize):
         avgLoss=0
         testSize=len(observations)
         with torch.no_grad():
             for i in tqdm(range(0,testSize,batchSize)):
                 observationBatch=observations[i:i+batchSize].to(self.device)
                 answersBatch=answers[i:i+batchSize].to(self.device)
-                outputs=self(observationBatch)
+                questionBatch=questions[i:i+batchSize].to(self.device)
+
+                outputs=self(observationBatch,questionBatch)
                 loss=self.lossFunct(outputs,answersBatch)
 
                 avgLoss+=loss.item()*len(observationBatch)
