@@ -4,6 +4,10 @@
 
 The paper of interest is "Discovering physical concepts with neural networks", by R. Iten, T. Metger, H.Wilming, L. del Rio, and R. Renner (arXiv:1807.10300v1 (2018)).
 
+Humans tend to build new models around existing ones, which can be counterproductive, calling into question whether current models are truly the simplest way of explaining data. The paper questions how machine learning can combat our limitations and tell us whether we are right or wrong in our modelling. A network can begin with no assumptions, unlike a human mind, completely unbiased. While neural networks have been applied to a variety of problems in physics, most work to date has focused on their efficiency or quality of predictions, without understanding what it  has really learned.
+
+The goal of this paper is to create a neural network which can learn physics. The paper introduces SciNet, a neural network architecture that models physical reasoning processes, which can be used to extract simple physical concepts from experimental data in an unbiased manner. The network compresses experimental data into a simple (latent) representation to answer questions about the system. 
+
 ![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
 
 Human learning, as illustrated in figure a) below, consists of first compressing experimental observations into a simple representation (*encoding*). At a later time, if asked a question about the physical system, one can produce an answer using the representation, withouth the original data (*decoding*). For example, the observation can be a few seconds of watching someone ski down a hill. The representation can be parameters: speed (*v*) and initial position (*x<sub>0</sub>*). The decoder implements the appropriate equation of motion using the information provided by the representation, to produce an answer.
