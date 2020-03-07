@@ -1,26 +1,25 @@
 import torch.optim as optim
 import torch.nn as nn
 
+
 class Hyperparameters:
     def __init__(self):
-        #first is for observation nodes
-        self.encoderNodes=[5,100,100]
-        self.encoderLayers=len(self.encoderNodes)
 
-        self.latentNodes=2
-        self.questionNodes=1
+        # Observation nodes and encoder
+        self.encoderNodes = [5, 100, 100]
+        self.encoderLayers = len(self.encoderNodes)
 
-        #last is for answer neuron
-        self.decoderNodes=[100,100,5]
-        self.decoderLayers=len(self.decoderNodes)
-        self.answerNodes=1
-        
-        #note learning rate should not be set too high because 
-        #of dead relu problems this is also effected by higher batch sizes
-        self.learningRate=0.001
+        self.latentNodes = 2
+        self.questionNodes = 1
 
-        self.optimizer=optim.Adam
-        self.lossFunct=nn.MSELoss
+        # Decoder and answer nodes
+        self.decoderNodes = [100, 100, 5]
+        self.decoderLayers = len(self.decoderNodes)
+        self.answerNodes = 1
 
-        
-        
+        # Note learning rate and batch size must not be too high due to
+        # dead relu problems
+        self.learningRate = 0.001
+
+        self.optimizer = optim.Adam
+        self.lossFunct = nn.MSELoss
