@@ -96,7 +96,7 @@ class Scinet(nn.Module):
         print("Training loss:",avgLoss)
         return (avgLoss)
     
-    def test(self,observations,answers,questions,batchSize):
+    def test(self,observations,questions,answers,batchSize):
         avgLoss=0
         testSize=len(observations)
         with torch.no_grad():
