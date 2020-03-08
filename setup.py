@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # Package information
 NAME = 'SciNet'
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 DESCRIPTION = 'PHYS490 Final Project - SciNet recreation'
 with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -19,7 +19,9 @@ CONTACT_EMAIL = 'nmdickso@edu.uwaterloo.ca'
 
 # Installation information
 # TODO should actually read this from requirements.txt
-REQUIRED = ['numpy', 'torch', 'matplotlib']
+with open(os.path.join(here, 'requirements.txt')) as f:
+    REQUIRED = f.read().splitlines()
+
 REQUIRES_PYTHON = '>=3.7'
 
 # setup parameters
