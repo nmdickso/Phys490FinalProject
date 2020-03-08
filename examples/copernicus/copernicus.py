@@ -1,12 +1,13 @@
-import scinet.scinet
-import scinet.hyperparameters as hyper
+import scinet
+import data_gen
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as funct
 
 
-class TimeEvolvedScinet(scinet.scinet.Scinet):
+class TimeEvolvedScinet(scinet.Scinet):
 
     def __init__(self, hyp):
         super().__init__(hyp)
@@ -15,7 +16,7 @@ class TimeEvolvedScinet(scinet.scinet.Scinet):
 
         self.evolver = nn.ModuleList((nn.Linear(N, N), nn.Linear(N, N)))
 
-    def forward(self, x):
+    def forward(self, x, question):
         # Dummy question neuron
         # question=torch.Tensor(x.size()[0]*[[0]]).to(self.device)
 
@@ -43,6 +44,25 @@ class TimeEvolvedScinet(scinet.scinet.Scinet):
 
 
 if __name__ == '__main__':
-    hyp = hyper.Hyperparameters()
+
+    hyp = scinet.Hyperparameters()
+    hyp.encoderNodes[0] = 2
+    hyp.latentNodes = 2
+    hyp.decoderNodes[-1] = 2
+    hyp.questionNodes = 0
 
     model = TimeEvolvedScinet(hyp)
+
+    # TODO havent really figured out how to apply the time evolution multiple
+    #   times, what do we train on?
+    φ_e, φ_m, θ_e, θ_m = data_gen.generate_orbits(1000, 2, 7)
+
+    for i in range(100):
+
+        # Observation are the first elements of θ
+        obs = torch.from_numpy(np.vstack((θ_e[:, 0], θ_m[:, 0])).T).float()
+
+        # Answers are the proceeding elements of θ, one for each jump
+        ans = torch.from_numpy(np.vstack((θ_e[:, -1], θ_m[:, -1])).T).float()
+
+        loss = model.train(obs, torch.Tensor([]), ans, 100)
