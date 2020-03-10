@@ -28,6 +28,10 @@ SciNet is a simply-connected neural network with a bottleneck and an additional 
 
 For the loss function and optimizer, a few choices were compared before settling with mean square loss and adam, respectively.
 
+
+## Extending the Examples
+
+
 # Requirements
 
 - Python 3.x
@@ -36,7 +40,7 @@ For the loss function and optimizer, a few choices were compared before settling
 - ``torch``
 - ``tqdm``
 
-# Running the Network
+## Running the Network
 
 1. Clone the repository.
 2. Import `from scinet import *`. This includes the shortcuts `nn` to the `model.py` code and `dl` to the `data_loader.py` code.
