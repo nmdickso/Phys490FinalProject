@@ -32,11 +32,51 @@ For the loss function and optimizer, a few choices were compared before settling
 ## Examples
 ### Damped Pendulum
 
+The time evolution of the system is given by the differential equation in the top right of the slide. One that I am sure most of you are familiar with.
+m is the mass of the pendulum, k is the spring constant and b is the damping factor. Only k and b matter as m can simply be absorbed into them.
+![equation](https://latex.codecogs.com/gif.latex?m%5Cddot%7Bx%7D%20%3D%20-kx%20-b%20%5Cdot%7Bx%7D)
+The authors created the scinet structure with 3 latent neurons.
+
+The network was given position timeseries data of a damped pendulum as the training observations. The question posed to the network was “Where would the pendulum be at time t, outside the observation timeseries?”
+
+As can be seen in the position graph, it could do so very well, with a RMS accuracy less than 2%
+
+Examining the sensitivity of the latent neurons to k and b revealed that the system was correctly determining these physical constants as the only ones necessary to predict a solution.
+
+The neuron’s linear activation wrt each constant are illustrated in the bottom plots.
+There was no sensitivity of the third neuron to either of the parameters, meaning it gave no important information toward the final prediction, as one might expect.
+
+
+#### Recreating the Dampled Pendulum
+
+
+#### Extending the Dampled Pendulum
+
 ### Copernican Heliocentrism
+In the 1500’s Copernicus observed the the complex motion of the planets in the sky and postulated a heliocentric model as the simplest representation of the solar system.
+To investigate the same process, we pose the problem to SciNet of predicting, based on prior positions, the angles of the Sun and Mars, as seen from Earth, at some future time. That is, describing the time evolution of the planetary orbits.
+In order to simulate time evolution, a small feed-forward network is introduced after the representation, before the decoder is applied, transforming SciNet into a recurrent neural network.
+In the paper, it is shown that the information stored in the time-evolved latent representation actually corresponds to the angles of the planets as seen from the Sun, demonstrating that the simplest representation it can find is, as Copernicus, the heliocentric model.
+
+#### Recreating the Dampled Pendulum
+#### Extending the Dampled Pendulum
 
 ### Representation of Qubits
+An interesting property of scinet is its ability to determine properties of physical systems with no prior theoretical structure. Take the case of determining the dimensionality of a Hilbert space
 
-### Extending the Examples
+-For this, scinet is given the average measurement identical states psi with respect to basis states phi.It is then posed a question, “what will be the result of a measurement of psi with respect to a random state omega?”
+
+-It is important to stress that omega, is parameterized in such a way as to not hint at any human invented structure
+
+-For tomographically complete observations, scinet’s Error drops with the number of representation neurons until said number equals the degrees of freedom of the hilbert space, after which the predictions have near perfect accuracy 
+
+-For tomographically incomplete data scinets Error plateaus before the number of representations neurons reaches the degrees of freedom of the hilbert space, with further representation neurons not decreasing Error
+
+Rough notes for possible extension:
+What would happen if you had psi be an entangled 2 qubit system, and we added a non fixed input (call it beta) which represented average result of a the partial measurement of the first system, we then had omega be the parameterization of a partial measurement on the second system. Would scinet respond similarly to decreasing the number latent neurons for both non-entangled and entangled partial measurements (my hypothesis would be yes).
+
+#### Recreating the Dampled Pendulum
+#### Extending the Dampled Pendulum
 
 
 # Requirements
@@ -55,3 +95,8 @@ For the loss function and optimizer, a few choices were compared before settling
 
 Generated data files are stored in the ``data`` directory. Saved models are stored in the ``save`` directory
 
+### Running Dampled Pendulum
+
+### Running Heliocentrism
+
+### Running Representation of Qubits
