@@ -32,20 +32,21 @@ For the loss function and optimizer, a few choices were compared before settling
 ## Examples
 ### Damped Pendulum
 
-The time evolution of the system is given by the differential equation in the top right of the slide. One that I am sure most of you are familiar with.
-m is the mass of the pendulum, k is the spring constant and b is the damping factor. Only k and b matter as m can simply be absorbed into them.
+The time evolution of the damped pendulum system is given by the following differential:
 ![equation](https://latex.codecogs.com/gif.latex?m%5Cddot%7Bx%7D%20%3D%20-kx%20-b%20%5Cdot%7Bx%7D)
-The authors created the scinet structure with 3 latent neurons.
 
-The network was given position timeseries data of a damped pendulum as the training observations. The question posed to the network was “Where would the pendulum be at time t, outside the observation timeseries?”
+The mass of the pendulum is denoted by *m*, the spring constant by *k*, and the damping factor by *b*. Only *k* and *b* are relevant here, as *m* can simply be absorbed into them. The authors of the paper created the SciNet structure with three latent neurons.
 
-As can be seen in the position graph, it could do so very well, with a RMS accuracy less than 2%
+The network is given position timeseries data of a damped pendulum, as the training observations. The question posed to the network is: “Where would the pendulum be at time *t*, outside the observation timeseries?”
 
-Examining the sensitivity of the latent neurons to k and b revealed that the system was correctly determining these physical constants as the only ones necessary to predict a solution.
+As can be seen in the position-time graph below, the network performs quite well, with a root mean squared accuracy of less than 2%.
 
-The neuron’s linear activation wrt each constant are illustrated in the bottom plots.
-There was no sensitivity of the third neuron to either of the parameters, meaning it gave no important information toward the final prediction, as one might expect.
+![pendulum](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/pendulum.JPG)
 
+Examining the sensitivity of the latent neurons to *k* and *b* revealed that the system was correctly determining these physical constants as the only ones required to predict a solution. The neuron’s linear activation with respect to each constant are illustrated in the plots below.
+There is no sensitivity of the third neuron to either of the parameters, meaning it gives no important information towards the final prediction, as one might expect.
+
+![pendulum_graph](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/pendulum_graph.JPG)
 
 #### Recreating the Dampled Pendulum
 
