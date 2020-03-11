@@ -61,6 +61,8 @@ class Scinet(nn.Module):
         x = funct.relu(self.latent(x))
 
         # Concatenate output of encoder with question
+        print(x)
+        print(question)
         x = torch.cat((question, x), dim=-1)
 
         # Pass through decoder layers (without applying relu on answer neuron)
@@ -75,7 +77,7 @@ class Scinet(nn.Module):
         return x
 
     def train(self, observations, questions, answers, batchSize):
-
+        print("hello")
         avgLoss = 0
         trainSize = len(observations)
 
