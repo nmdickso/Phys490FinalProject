@@ -8,8 +8,6 @@ Humans tend to build new models around existing ones, which can be counterproduc
 
 The goal of this paper is to create a neural network which can learn physics. The paper introduces SciNet, a neural network architecture that models physical reasoning processes, which can be used to extract simple physical concepts from experimental data in an unbiased manner. The network compresses experimental data into a simple (latent) representation to answer questions about the system. 
 
-![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
-
 Human learning, as visualized in figure (a) below, consists of first compressing experimental observations into a simple representation (*encoding*). At a later time, if asked a question about the physical system, one can produce an answer using the representation, withouth the original data (*decoding*). For example, the observation can be a few seconds of watching someone ski down a hill. The representation can be parameters: speed (*v*) and initial position (*x<sub>0</sub>*). The decoder implements the appropriate equation of motion using the information provided by the representation, to produce an answer.
 
 A physicists reasoning can be broken into four parts, visualized in figure (a).
@@ -48,39 +46,32 @@ There is no sensitivity of the third neuron to either of the parameters, meaning
 
 ![pendulum_graph](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/pendulum_graph.JPG)
 
-#### Recreating the Dampled Pendulum
-
-
-#### Extending the Dampled Pendulum
+#### Extending the Dampled Pendulum Model
 
 ### Copernican Heliocentrism
-In the 1500’s Copernicus observed the the complex motion of the planets in the sky and postulated a heliocentric model as the simplest representation of the solar system.
-To investigate the same process, we pose the problem to SciNet of predicting, based on prior positions, the angles of the Sun and Mars, as seen from Earth, at some future time. That is, describing the time evolution of the planetary orbits.
-In order to simulate time evolution, a small feed-forward network is introduced after the representation, before the decoder is applied, transforming SciNet into a recurrent neural network.
-In the paper, it is shown that the information stored in the time-evolved latent representation actually corresponds to the angles of the planets as seen from the Sun, demonstrating that the simplest representation it can find is, as Copernicus, the heliocentric model.
+In the 1500’s Copernicus observed the complex motion of the planets in the sky and postulated a heliocentric model as the simplest representation of the solar system. To investigate the same process, we posed the problem to SciNet of predicting, based on prior positions, the angles of the Sun and Mars as seen from Earth, at a future time. That is, describing the time evolution of the planetary orbits.
 
-#### Recreating the Dampled Pendulum
-#### Extending the Dampled Pendulum
+![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
+
+In order to simulate time evolution, a small feed-forward network is introduced after the representation, before the decoder is applied, transforming SciNet into a recurrent neural network. In the paper, it is shown that the information stored in the time-evolved latent representation corresponds to the angles of the planets as seen from the Sun, demonstrating that the simplest representation it can find is, as Copernicus discovered, the heliocentric model.
+
+#### Extending the Copernican Heliocentrism Model
 
 ### Representation of Qubits
-An interesting property of scinet is its ability to determine properties of physical systems with no prior theoretical structure. Take the case of determining the dimensionality of a Hilbert space
+An interesting property of SciNet is its ability to determine properties of physical systems with no prior theoretical structure. In the case of determining the dimensionality of a Hilbert space, SciNet is given the average "measurement identical states" psi, with respect to "basis states" phi. The following question is then posed: “What is the result of a measurement of psi with respect to a random state omega?”
 
--For this, scinet is given the average measurement identical states psi with respect to basis states phi.It is then posed a question, “what will be the result of a measurement of psi with respect to a random state omega?”
+![Qubits](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/qubits.JPG)
 
--It is important to stress that omega, is parameterized in such a way as to not hint at any human invented structure
+Omega is parameterized in such a way as to not hint at any human invented structure. For tomographically complete observations, SciNet’s error drops with the number of representation neurons until it equals the degrees of freedom of the Hilbert Space, after which the predictions have near perfect accuracy. 
 
--For tomographically complete observations, scinet’s Error drops with the number of representation neurons until said number equals the degrees of freedom of the hilbert space, after which the predictions have near perfect accuracy 
+For tomographically *incomplete* data, SciNet's error plateaus before the number of representation neurons reaches the degrees of freedom of the Hilbert Space, with further representation neurons not decreasing in error.
 
--For tomographically incomplete data scinets Error plateaus before the number of representations neurons reaches the degrees of freedom of the hilbert space, with further representation neurons not decreasing Error
+#### Extending the Representation of Qubits Problem
+To extend this problem, we can pose the question: "What would happen if psi consisted of an entangled 2 qubit system and a non-fixed input representing the average result of the partial measurement of the first system? Omega would be the parameterization of a partial measurement on the second system. Would SciNet respond in a similar manner to decreasing the number of latent neurons for both non-entangled and entangled partial measurements? 
 
-Rough notes for possible extension:
-What would happen if you had psi be an entangled 2 qubit system, and we added a non fixed input (call it beta) which represented average result of a the partial measurement of the first system, we then had omega be the parameterization of a partial measurement on the second system. Would scinet respond similarly to decreasing the number latent neurons for both non-entangled and entangled partial measurements (my hypothesis would be yes).
+# Technical Instructions
 
-#### Recreating the Dampled Pendulum
-#### Extending the Dampled Pendulum
-
-
-# Requirements
+### Requirements
 
 - Python 3.x
 - ``numpy``
@@ -88,16 +79,12 @@ What would happen if you had psi be an entangled 2 qubit system, and we added a 
 - ``torch``
 - ``tqdm``
 
-## Running the Network
-
+### Running the Dampled Pendulum Model
 1. Clone the repository.
-2. Import `from scinet import *`. This includes the shortcuts `nn` to the `model.py` code and `dl` to the `data_loader.py` code.
-3. Import additional files (e.g. data generation scripts) using `import scinet.my_data_generator as my_data_gen_name`.
+2. pip install '-e.'
+3. Import 'scinet'
 
 Generated data files are stored in the ``data`` directory. Saved models are stored in the ``save`` directory
+### Running the Heliocentrism Model
 
-### Running Dampled Pendulum
-
-### Running Heliocentrism
-
-### Running Representation of Qubits
+### Running the Representation of Qubits Model
