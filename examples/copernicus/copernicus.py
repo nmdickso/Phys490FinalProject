@@ -1,10 +1,35 @@
 import scinet
 import data_gen
 
+import tqdm
 import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as funct
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
+def visualize_latent(φ_e, φ_m, activation):
+    '''activation M=2'''
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(121, projection='3d')
+    ax2 = fig.add_subplot(122, projection='3d')
+
+    for i, ax in enumerate((ax1, ax2)):
+        act = activation[:, i].detach()
+
+        ax.scatter(φ_e, φ_m, act, c=act)
+
+        ax.set_title(f'Latent neuron #{i+1}')
+        ax.set_xlabel('φ_e')
+        ax.set_ylabel('φ_m')
+        ax.set_zlabel('activation')
+
+    plt.show()
 
 
 class TimeEvolvedScinet(scinet.Scinet):
@@ -65,4 +90,6 @@ if __name__ == '__main__':
         # Answers are the proceeding elements of θ, one for each jump
         ans = torch.from_numpy(np.vstack((θ_e[:, -1], θ_m[:, -1])).T).float()
 
-        loss = model.train(obs, torch.Tensor([]), ans, 100)
+        loss = model.train(obs, torch.Tensor([]), ans, 1000)
+
+    visualize_latent(φ_e[:, 0], φ_m[:, 0], model.latent_out)
