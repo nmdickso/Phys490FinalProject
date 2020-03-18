@@ -9,6 +9,49 @@ a_e = 1.
 a_m = 1.52366231
 
 
+def anim_orbit(φ_e, φ_m, θ_e, θ_m):
+    '''show an animated orbit example, of both viewpoints
+    only uses the first row of the datasets, for ease
+    '''
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as anim
+
+    def _update_plot(n):
+
+        lines[0].set_data(φ_e[:n], R_e[:n])
+        lines[1].set_data(φ_m[:n], R_m[:n])
+
+        lines[2].set_data(θ_e[:n], R_e[:n])
+        lines[3].set_data(θ_m[:n], R_m[:n])
+
+        return lines
+
+    φ_e, φ_m, θ_e, θ_m = φ_e[0, :], φ_m[0, :], θ_e[0, :], θ_m[0, :]
+
+    R_e, R_m = np.ones_like(φ_e) * a_e, np.ones_like(φ_m) * a_m
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'polar': True})
+
+    ax1.set_title('Sun Angle')
+    ax2.set_title('Earth Angle')
+
+    ax1.plot(0, 0, 'ko')
+    [line1_e] = ax1.plot(φ_e, R_e, '-go', markevery=[-1])
+    [line1_m] = ax1.plot(φ_m, R_m, '-ro', markevery=[-1])
+
+    ax2.plot(0, 0, 'go')
+    [line2_e] = ax2.plot(θ_e, R_e, '-ko', markevery=[-1])
+    [line2_m] = ax2.plot(θ_m, R_m, '-ro', markevery=[-1])
+
+    lines = [line1_e, line1_m, line2_e, line2_m]
+
+    fig.legend(lines, ['Earth', 'Mars', 'Sun'])
+
+    anim.FuncAnimation(fig, _update_plot, φ_e.size, interval=25, blit=True)
+
+    plt.show()
+
+
 def generate_orbits(N, M, del_t):
     '''
     N = N_dataset, amount of training datasets
