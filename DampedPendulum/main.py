@@ -1,15 +1,29 @@
 # Standard library imports
 import argparse
+import sys
+import os
 
-# Additional dependancied
+# Additional dependancies
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
 # Custom libraries
 import scinet
 
-num_epochs = 100
-display_epoch = 5
+num_epochs = 10000
+display_epoch = 100
+learning_rate = 1e-2
+batch_size = 0.05
+
+
+# Sets stdout to /dev/null
+def hide_output():
+	sys.stdout = open(os.devnull, 'w')
+
+
+def show_output():
+	sys.stdout = sys.__stdout__
 
 
 def load_data(input_file):
@@ -43,21 +57,15 @@ def load_data(input_file):
     return spring_consts, damp_consts, X
 
 
-def main(input_file):
-    # ==============================================================
-    # Load the data from the generated file
-    # ==============================================================
+def split_and_format_data(O):
 
-    # Load data
-    spring_consts, damp_consts, O = load_data(input_file)
-    n_observations = len(spring_consts)
-    n_points = len(O[0])
+    n_observations, n_points, _ = O.shape
 
     # create questions and answers
     questions_inds = np.random.randint(0, n_points, size=(n_observations,))
     QA = np.array([O[i, j, :] for i, j in zip(range(n_observations), questions_inds)])
-    Q = QA[:, 0]
-    A = QA[:, 1]
+    Q = np.array([[i] for i in QA[:, 0]])
+    A = np.array([[i] for i in QA[:, 1]])
     O = O[:, :, 1]
 
     # now we have the necessary Observations, Questions and Answers
@@ -76,37 +84,103 @@ def main(input_file):
     train_A = torch.from_numpy(A[train_test_bool]).float()
     test_A = torch.from_numpy(A[~train_test_bool]).float()
 
-    # ==============================================================
-    # Load Hyper Parameters object to initialise the network
-    # ==============================================================
+    return train_O, test_O, train_Q, test_Q, train_A, test_A
 
-    # Initialize object
+
+def load_hyperparams(n_points):
+
+    # initialize object from package
     params = scinet.Hyperparameters()
-    params.latentNodes = 3
-    params.encoderNodes = [n_points, 100, 100]
+
+    # Set encoder layers
+    params.encoderNodes = [n_points, 300, 300]
     params.encoderLayers = len(params.encoderNodes)
 
-    params.decoderNodes = [100, 100, 1]
+    # Set Latent nodes
+    params.latentNodes = 3
+
+    # Set decoder layers
+    params.decoderNodes = [300, 300, 1]
     params.decoderLayers = len(params.decoderNodes)
+
+    # Set learning rate
+    params.learningRate = learning_rate
+
+    return params
+
+
+def train_SciNet(model, train_O, train_Q, train_A):
+    print("\nTraining Model...")
+
+    n_observations = train_O.shape[0]
+    batch_length = int(np.ceil(batch_size * n_observations))
+    train_inds = np.array(list(range(n_observations)))
+
+    losses = []
+    hide_output()
+    for epoch in range(num_epochs):
+
+        tmp_train_inds = list(
+            np.random.choice(
+                train_inds,
+                size=(batch_length),
+                replace=False
+            )
+        )
+        tmp_train_O = train_O[tmp_train_inds, :]
+        tmp_train_Q = train_Q[tmp_train_inds, :]
+        tmp_train_A = train_A[tmp_train_inds, :]
+
+        tmploss = model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
+        losses.append(tmploss)
+
+        if (not (epoch) % display_epoch):
+            show_output()
+            print(f"EPOCH: {epoch:02d} of {num_epochs}.\tLOSS: {tmploss}")
+            hide_output()
+    show_output()
+    return losses
+
+
+def main(input_file):
+    # ==============================================================
+    # Load the data from the generated file
+    # ==============================================================
+    spring_consts, damp_consts, O = load_data(input_file)
+    train_O, test_O, train_Q, test_Q, train_A, test_A = split_and_format_data(O)
+    n_points = train_O.shape[1]
 
     # ==============================================================
     # Create scinet object
     # ==============================================================
 
-    # initialize object
+    # initialize parameters
+    params = load_hyperparams(n_points)
+
+    # initialize scinet
     model = scinet.Scinet(params)
     model.float()
 
-    # begin training
-    print("\nTraining Model...")
+    # ==============================================================
+    # Train SciNet
+    # ==============================================================
+    losses = train_SciNet(model, train_O, train_Q, train_A)
 
-    losses = []
-    for epoch in range(num_epochs):
-        tmploss = model.train(train_O, train_Q, train_A, 5)
-        losses.append(tmploss)
+    # ==============================================================
+    # Test time!
+    # ==============================================================    
+    model_A = model.forward(test_O, test_Q).detach().numpy().ravel()
+    test_A = test_A.numpy().ravel()
 
-        if (not (epoch) % display_epoch):
-            print(f"EPOCH: {epoch:02d} of {num_epochs}.\tLOSS: {tmploss}")
+    fig, ax = plt.subplots()
+
+    ax.set_aspect('equal')
+    ax.plot([-1, 1], [-1, 1], 'k-')
+    ax.plot(test_A, model_A, 'bo')
+    ax.set_xlabel("Simulated Position")
+    ax.set_ylabel("SciNet Position")
+
+    plt.show()
 
     return
 

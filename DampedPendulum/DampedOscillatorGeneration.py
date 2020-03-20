@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Script Defaults
-DEFAULT_DOMAIN = [0, 10]
+DEFAULT_DOMAIN = [0, 4]
 DEFAULT_NUMPOINTS = 500
 DEFAULT_x0 = 1
 DEFAULT_v0 = 0
@@ -86,7 +86,7 @@ def main(
         newline = " ".join(str_t) + "\n"
         f.write(newline)        
         for k, b in all_kb_pairs:
-            _, x, _ = damped_oscillator(k, b)
+            _, x, _ = damped_oscillator(k, b, domain=domain, num_points=num_points, x_0=x_0, v_0=v_0)
             newline = [f"{k:.6f}", f"{b:.6f}"] + [f"{i:.6f}" for i in x]
             newline = " ".join(newline) + "\n"
             f.write(newline)
@@ -154,7 +154,9 @@ if __name__ == "__main__":
 
     output_file = args.output_file
     k_tup = args.k_range
+    k_tup = [k_tup[0], k_tup[1], int(k_tup[2])]
     b_tup = args.b_range
+    b_tup = [b_tup[0], b_tup[1], int(b_tup[2])]
     domain = args.domain
     num_points = args.num_points
     x_0 = args.initial_position
