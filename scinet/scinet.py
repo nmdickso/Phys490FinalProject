@@ -1,4 +1,3 @@
-
 from tqdm import tqdm
 import torch
 import torch.nn as nn
@@ -19,6 +18,10 @@ class Scinet(nn.Module):
 
             fcLayer = nn.Linear(inputNodes, outputNodes)
             self.encoder.append(fcLayer)
+
+        # create mu and sigma layer
+        self.fc_mu = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
+        self.fc_sig = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
 
         # Add latent layer
         inputNodes = hyp.encoderNodes[-1]
@@ -47,73 +50,118 @@ class Scinet(nn.Module):
 
         # Optimizer and loss functions
         self.optimizer = hyp.optimizer(self.parameters(), hyp.learningRate)
-        self.lossFunct = hyp.lossFunct()
+        self.leadingLoss = hyp.leadingLoss
+        self._defineLoss()
 
-    def forward(self, x, question):
-        # Dummy question neuron
-        # question=torch.Tensor(x.size()[0]*[[0]]).to(self.device)
+    def _defineLoss(self):
 
+        if self.leadingLoss == 'BCE':
+            leadingLoss = nn.BCELoss(reduction='sum')
+        else:
+            leadingLoss = nn.MSELoss(reduction='sum')
+
+        def VAE_loss(mu, sig, X_rec, X):
+            leading = leadingLoss(X_rec, X)
+            std = torch.exp(sig.mul_(0.5))
+            D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
+            return leading - D_KL.sum()
+        
+        self.lossFunct = VAE_loss
+
+    def encode(self, x):
         # Pass through encoder layers
         for layer in self.encoder:
             x = funct.relu(layer(x))
+        # Create mu and sig    
+        mu = self.fc_mu(x)
+        sig = self.fc_sig(x)
+        # Return them
+        return mu, sig
 
-        # Pass through latent layer
-        x = funct.relu(self.latent(x))
+    def reparameterize(self, mu, sig):
+        # generate normal dist
+        gauss = torch.randn_like(sig)
+        # convert sig to std
+        std = torch.exp(sig.mul_(0.5))
+        # Appy formula for Z
+        Z = mu + gauss * std
+        # Return them
+        return Z
 
+    def decode(self, Z, question):
         # Concatenate output of encoder with question
-        x = torch.cat((question, x), dim=-1)
+        Z = torch.cat((question, Z), dim=-1)
 
         # Pass through decoder layers (without applying relu on answer neuron)
         lastDecoderLayer = len(self.decoder) - 1
 
         for i, layer in enumerate(self.decoder):
-            x = layer(x)
+            Z = layer(Z)
 
             if i != lastDecoderLayer:
-                x = funct.relu(x)
+                Z = funct.relu(Z)
+        return Z
 
-        return x
+    def forward(self, x, question, verbose=False):
 
-    def train(self, observations, questions, answers, batchSize):
+        # pass through encoder
+        mu, sig = self.encode(x)
+
+        # reparamaterize
+        Z = self.reparameterize(mu, sig)
+
+        # decode
+        Y = self.decode(Z, question)
+
+        return mu, sig, Z, Y
+
+    def train(self, observations, questions, answers, batchSize, verbose=False):
 
         avgLoss = 0
         trainSize = len(observations)
 
-        for i in tqdm(range(0, trainSize, batchSize)):
+        for i in range(0, trainSize, batchSize):
 
             observationBatch = observations[i:i + batchSize].to(self.device)
             answersBatch = answers[i:i + batchSize].to(self.device)
             questionBatch = questions[i:i + batchSize].to(self.device)
 
             self.zero_grad()
-            outputs = self(observationBatch, questionBatch)
-            loss = self.lossFunct(outputs, answersBatch)
+            mu, sig, Z, outputs = self(observationBatch, questionBatch, verbose=verbose)
+            loss = self.lossFunct(mu, sig, outputs, answersBatch)
             loss.backward()
             self.optimizer.step()
 
             avgLoss += loss.item() * len(observationBatch)
 
         avgLoss /= trainSize
-        print("Training loss:", avgLoss)
+
+        if verbose:
+            print("Training loss:", avgLoss)
+
         return (avgLoss)
 
-    def test(self, observations, questions, answers, batchSize):
+    def test(self, observations, questions, answers, batchSize, verbose=False):
 
         avgLoss = 0
         testSize = len(observations)
 
         with torch.no_grad():
-            for i in tqdm(range(0, testSize, batchSize)):
+            # for i in tqdm(range(0, testSize, batchSize)):
+            for i in range(0, testSize, batchSize):
 
                 observationBatch = observations[i:i + batchSize].to(self.device)
                 answersBatch = answers[i:i + batchSize].to(self.device)
                 questionBatch = questions[i:i + batchSize].to(self.device)
 
-                outputs = self(observationBatch, questionBatch)
-                loss = self.lossFunct(outputs, answersBatch)
+                mu, sig, Z, outputs = self(observationBatch, questionBatch, verbose=verbose)
+                loss = self.lossFunct(mu, sig, outputs, answersBatch)
 
                 avgLoss += loss.item() * len(observationBatch)
 
         avgLoss /= testSize
-        print("Testing Loss:", avgLoss)
+
+        if verbose:
+            print("Testing Loss:", avgLoss)
+
         return (avgLoss)
