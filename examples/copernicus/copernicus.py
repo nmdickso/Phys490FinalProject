@@ -2,15 +2,23 @@ import scinet
 import data_gen
 
 import tqdm
-import numpy as np
-
 import torch
-import torch.nn as nn
-import torch.nn.functional as funct
+import numpy as np
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import FuncFormatter, MultipleLocator
+
+
+def _set_pi_ticks(axis_list):
+
+    for axis in axis_list:
+
+        axis.set_major_formatter(FuncFormatter(
+            lambda val, pos:
+            '{:.0g}$\pi$'.format(val / np.pi) if val else '0'
+        ))
+        axis.set_major_locator(MultipleLocator(base=np.pi))
 
 
 def visualize_latent(φ_e, φ_m, activation):
@@ -21,7 +29,7 @@ def visualize_latent(φ_e, φ_m, activation):
     ax2 = fig.add_subplot(122, projection='3d')
 
     for i, ax in enumerate((ax1, ax2)):
-        act = activation[:, i].detach()
+        act = activation[:, i]
 
         ax.scatter(φ_e, φ_m, act, c=act)
 
@@ -30,13 +38,82 @@ def visualize_latent(φ_e, φ_m, activation):
         ax.set_ylabel('φ_m')
         ax.set_zlabel('activation')
 
-        for axis in (ax.xaxis, ax.yaxis):
+        _set_pi_ticks((ax.xaxis, ax.yaxis))
 
-            axis.set_major_formatter(FuncFormatter(
-                lambda val, pos:
-                '{:.0g}$\pi$'.format(val / np.pi) if val else '0'
-            ))
-            axis.set_major_locator(MultipleLocator(base=np.pi))
+    plt.show()
+
+
+def visualize_sample(obs_θ, obs_φ, model_θ, model_φ):
+
+    import matplotlib.animation as anim
+
+    def _update_plot(n):
+
+        lines[0].set_data(obs_θ[:n, 0], R[:n])
+        lines[1].set_data(model_θ[:n, 0], R[:n])
+
+        lines[2].set_data(obs_θ[:n, 1], R[:n])
+        lines[3].set_data(model_θ[:n, 1], R[:n])
+
+        lines[4].set_data(x[:n], obs_θ[:n, 0])
+        lines[5].set_data(x[:n], model_θ[:n, 0])
+        lines[6].set_data(x[:n], diff_θ[:n, 0])
+
+        lines[7].set_data(x[:n], obs_θ[:n, 1])
+        lines[8].set_data(x[:n], model_θ[:n, 1])
+        lines[9].set_data(x[:n], diff_θ[:n, 1])
+
+        return lines
+
+    # Select a random orbit to visualize
+    # get rid of first obs point, which can't be compared with model
+    rand_ind = np.random.randint(obs_θ.shape[0])
+
+    obs_θ = obs_θ[rand_ind, 1:]
+    obs_φ = obs_φ[rand_ind, 1:]
+    model_θ = model_θ[rand_ind, :]
+    model_φ = model_φ[rand_ind, :]
+
+    diff_θ = obs_θ - model_θ
+
+    R = np.ones_like(obs_θ[:, 0])
+    x = range(R.size)
+
+    # Plot
+    fig = plt.figure()
+    fig.suptitle(f'Sample orbit {rand_ind}')
+
+    ax1, ax2 = fig.add_subplot(221, polar=1), fig.add_subplot(222, polar=1)
+    ax3, ax4 = fig.add_subplot(223), fig.add_subplot(224)
+
+    ax1.set_title('Sun Angle (θ_e)')
+    ax2.set_title('Mars Angle (θ_m)')
+
+    ax1.plot(0, 0, 'go')
+    ax2.plot(0, 0, 'go')
+
+    [line1_o] = ax1.plot(obs_θ[:, 0], R, '-go')  # , markevery=[-1])
+    [line1_m] = ax1.plot(model_θ[:, 0], R, '-ro')  # , markevery=[-1])
+
+    [line2_o] = ax2.plot(obs_θ[:, 1], R, '-go')  # , markevery=[-1])
+    [line2_m] = ax2.plot(model_θ[:, 1], R, '-ro')  # , markevery=[-1])
+
+    [line3_o] = ax3.plot(x, obs_θ[:, 0], '-go')
+    [line3_m] = ax3.plot(x, model_θ[:, 0], '-ro')
+    [line3_d] = ax3.plot(x, diff_θ[:, 0], '-bo')
+
+    [line4_o] = ax4.plot(x, obs_θ[:, 1], '-go')
+    [line4_m] = ax4.plot(x, model_θ[:, 1], '-ro')
+    [line4_d] = ax4.plot(x, diff_θ[:, 1], '-bo')
+
+    lines = [line1_o, line1_m, line2_o, line2_m,
+             line3_o, line3_m, line3_d, line4_o, line4_m, line4_d]
+
+    fig.legend(lines, ['Observations', 'Model'])
+
+    _set_pi_ticks((ax3.yaxis, ax4.yaxis))
+
+    anim.FuncAnimation(fig, _update_plot, model_θ.shape[0], blit=True)
 
     plt.show()
 
@@ -62,10 +139,10 @@ class TimeEvolvedScinet(scinet.Scinet):
 
             # Pass through encoder
             for layer in self.encoder:
-                x = funct.relu(layer(x))
+                x = torch.tanh(layer(x))
 
             # Pass through latent layer
-            x = funct.relu(self.latent(x))
+            x = torch.tanh(self.latent(x))
 
         # Pass through the time evolution (τ) network
         for _ in range(self.τ_layers):
@@ -75,7 +152,7 @@ class TimeEvolvedScinet(scinet.Scinet):
 
         # Pass through decoder layers (without applying relu on answer neuron)
         for layer in self.decoder[:-1]:
-            x = funct.relu(layer(x))
+            x = torch.tanh(layer(x))
 
         # Answer neurons
         answer = self.decoder[-1](x)
