@@ -48,31 +48,39 @@ class TimeEvolvedScinet(scinet.Scinet):
 
         N = hyp.latentNodes
 
-        self.evolver = nn.ModuleList((nn.Linear(N, N), nn.Linear(N, N)))
+        self.τ_bias = torch.nn.Parameter(torch.zeros(N, requires_grad=True))
+        self.τ_layers = 3
 
-    def forward(self, x, question):
-        # Dummy question neuron
-        # question=torch.Tensor(x.size()[0]*[[0]]).to(self.device)
+        # Optimizer and loss functions
+        self.optimizer = hyp.optimizer(self.parameters(), hyp.learningRate)
+        self.lossFunct = hyp.lossFunct()
 
-        # Pass through encoder layers
-        for layer in self.encoder:
-            x = funct.relu(layer(x))
+    def forward(self, x, first_pass=False):
 
-        # Pass through latent layer
-        x = funct.relu(self.latent(x))
+        # Pass through encoder layers, if the input is not a latent layer
+        if first_pass:
 
-        # pass through time evolution network
-        for layer in self.evolver:
-            x = funct.relu(layer(x))
+            # Pass through encoder
+            for layer in self.encoder:
+                x = funct.relu(layer(x))
+
+            # Pass through latent layer
+            x = funct.relu(self.latent(x))
+
+        # Pass through the time evolution (τ) network
+        for _ in range(self.τ_layers):
+            x = x + self.τ_bias
+
+        evolved_latent = x
 
         # Pass through decoder layers (without applying relu on answer neuron)
-        lastDecoderLayer = len(self.decoder) - 1
+        for layer in self.decoder[:-1]:
+            x = funct.relu(layer(x))
 
-        for i, layer in enumerate(self.decoder):
-            x = layer(x)
+        # Answer neurons
+        answer = self.decoder[-1](x)
 
-            if i != lastDecoderLayer:
-                x = funct.relu(x)
+        return answer, evolved_latent
 
         return x
 
