@@ -231,25 +231,52 @@ class TimeEvolvedScinet(scinet.Scinet):
 if __name__ == '__main__':
 
     hyp = scinet.Hyperparameters()
+    hyp.learningRate = 0.001
     hyp.encoderNodes[0] = 2
     hyp.latentNodes = 2
     hyp.decoderNodes[-1] = 2
     hyp.questionNodes = 0
 
+    N = 17000
+    test_N = 1000
+    M = 5
+    del_t = 7  # days per step
+
+    batch_size = 2000
+
     model = TimeEvolvedScinet(hyp)
 
-    # TODO havent really figured out how to apply the time evolution multiple
-    #   times, what do we train on?
-    φ_e, φ_m, θ_e, θ_m = data_gen.generate_orbits(1000, 2, 7)
+    φ_e, φ_m, θ_e, θ_m = data_gen.generate_orbits(N, M, del_t)
 
-    for i in range(100):
+    data_gen.anim_orbit(φ_e, φ_m, θ_e, θ_m)
 
-        # Observation are the first elements of θ
-        obs = torch.from_numpy(np.vstack((θ_e[:, 0], θ_m[:, 0])).T).float()
+    loss = []
+    for i in tqdm.tqdm(range(25)):
 
-        # Answers are the proceeding elements of θ, one for each jump
-        ans = torch.from_numpy(np.vstack((θ_e[:, -1], θ_m[:, -1])).T).float()
+        # Observation are all the elements of θ
+        obs = torch.from_numpy(np.concatenate(
+            (θ_e[..., np.newaxis], θ_m[..., np.newaxis]), axis=-1
+        )).float()
 
-        loss = model.train(obs, torch.Tensor([]), ans, 1000)
+        loss.append(model.train(obs, batch_size))
 
-    visualize_latent(φ_e[:, 0], φ_m[:, 0], model.latent_out)
+    plt.plot(loss)
+    plt.show()
+
+    # Test
+    φ_et, φ_mt, θ_et, θ_mt = data_gen.generate_orbits(test_N, M, del_t)
+
+    test_θ = torch.from_numpy(np.concatenate(
+        (θ_et[..., np.newaxis], θ_mt[..., np.newaxis]), axis=-1
+    )).float()
+
+    test_φ = torch.from_numpy(np.concatenate(
+        (φ_et[..., np.newaxis], φ_mt[..., np.newaxis]), axis=-1
+    )).float()
+
+    loss, out_θ, out_φ = model.test(test_θ)
+
+    visualize_sample(test_θ, test_φ, out_θ, out_φ)
+
+    visualize_latent(φ_et[:, 0], φ_mt[:, 0], out_φ[:, 0, :])
+    visualize_latent(φ_et[:, -1], φ_mt[:, -1], out_φ[:, -1, :])
