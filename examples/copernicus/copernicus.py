@@ -82,7 +82,73 @@ class TimeEvolvedScinet(scinet.Scinet):
 
         return answer, evolved_latent
 
-        return x
+    def train(self, observations, batch_N):
+
+        avgLoss = 0
+        N = observations.shape[0]
+
+        for i in range(0, N, batch_N):
+
+            obs_batch = observations[i:i + batch_N].to(self.device)
+
+            # initial model input is given by first observation
+            obs = obs_batch[:, 0, :]
+
+            for te_step in range(observations.shape[1] - 1):
+
+                # Target θ given by proceeding observation
+                ans = obs_batch[:, te_step + 1, :]
+
+                self.zero_grad()
+
+                # Future model input given by evolved latent layers
+                outputs, obs = self(obs, not te_step)
+
+                # Loss function and propogation
+                loss = self.lossFunct(outputs, ans)
+                loss.backward(retain_graph=True)
+
+                self.optimizer.step()
+
+                avgLoss += loss.item()
+
+        # TODO figure out best returned loss calc for new RNN
+        avgLoss /= (N // batch_N)
+
+        return avgLoss
+
+    def test(self, observations):
+
+        avgLoss = 0
+
+        observations = observations.to(self.device)
+        model_θ = np.empty_like(observations)
+        model_φ = np.empty_like(observations)
+
+        with torch.no_grad():
+
+            # initial forward function input is given by observation
+            obs = observations[:, 0, :]
+
+            for te_step in range(observations.shape[1] - 1):
+
+                # Target θ given by proceeding observation
+                ans = observations[:, te_step + 1, :]
+
+                # future forward function input is given by te'd latent layers
+                model_ans, obs = self(obs, not te_step)
+
+                model_θ[:, te_step + 1, :] = model_ans
+                model_φ[:, te_step + 1, :] = obs
+
+                loss = self.lossFunct(model_ans, ans)
+
+                avgLoss += loss.item()
+
+            avgLoss /= observations.shape[1]
+
+        # f
+        return avgLoss, model_θ[:, 1:, :], model_φ[:, 1:, :]
 
 
 if __name__ == '__main__':
