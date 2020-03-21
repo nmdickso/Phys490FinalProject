@@ -10,6 +10,7 @@ import torch.nn.functional as funct
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.ticker import FuncFormatter, MultipleLocator
 
 
 def visualize_latent(φ_e, φ_m, activation):
@@ -28,6 +29,14 @@ def visualize_latent(φ_e, φ_m, activation):
         ax.set_xlabel('φ_e')
         ax.set_ylabel('φ_m')
         ax.set_zlabel('activation')
+
+        for axis in (ax.xaxis, ax.yaxis):
+
+            axis.set_major_formatter(FuncFormatter(
+                lambda val, pos:
+                '{:.0g}$\pi$'.format(val / np.pi) if val else '0'
+            ))
+            axis.set_major_locator(MultipleLocator(base=np.pi))
 
     plt.show()
 
