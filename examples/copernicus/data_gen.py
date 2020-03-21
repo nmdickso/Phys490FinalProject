@@ -24,16 +24,26 @@ def anim_orbit(φ_e, φ_m, θ_e, θ_m):
         lines[2].set_data(θ_e[:n], R_e[:n])
         lines[3].set_data(θ_m[:n], R_m[:n])
 
+        lines[4].set_data(x[:n], φ_e[:n])
+        lines[5].set_data(x[:n], φ_m[:n])
+
+        lines[6].set_data(x[:n], θ_e[:n])
+        lines[7].set_data(x[:n], θ_m[:n])
+
         return lines
 
     φ_e, φ_m, θ_e, θ_m = φ_e[0, :], φ_m[0, :], θ_e[0, :], θ_m[0, :]
 
     R_e, R_m = np.ones_like(φ_e) * a_e, np.ones_like(φ_m) * a_m
+    x = range(φ_e.size)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw={'polar': True})
+    fig = plt.figure()
 
-    ax1.set_title('Sun Angle')
-    ax2.set_title('Earth Angle')
+    ax1, ax2 = fig.add_subplot(221, polar=1), fig.add_subplot(222, polar=1)
+    ax3, ax4 = fig.add_subplot(223), fig.add_subplot(224)
+
+    ax1.set_title('Sun Angle (φ)')
+    ax2.set_title('Earth Angle (θ)')
 
     ax1.plot(0, 0, 'ko')
     [line1_e] = ax1.plot(φ_e, R_e, '-go', markevery=[-1])
@@ -43,11 +53,21 @@ def anim_orbit(φ_e, φ_m, θ_e, θ_m):
     [line2_e] = ax2.plot(θ_e, R_e, '-ko', markevery=[-1])
     [line2_m] = ax2.plot(θ_m, R_m, '-ro', markevery=[-1])
 
-    lines = [line1_e, line1_m, line2_e, line2_m]
+    [line3_e] = ax3.plot(x, φ_e, '-go')
+    [line3_m] = ax3.plot(x, φ_m, '-ro')
+
+    [line4_e] = ax4.plot(x, θ_e, '-ko')
+    [line4_m] = ax4.plot(x, θ_m, '-ro')
+
+    lines = [line1_e, line1_m, line2_e, line2_m,
+             line3_e, line3_m, line4_e, line4_m]
 
     fig.legend(lines, ['Earth', 'Mars', 'Sun'])
 
-    anim.FuncAnimation(fig, _update_plot, φ_e.size, interval=25, blit=True)
+    # TODO cool little angle (shading) between planets to see plot relations
+    # d = (a_e**2 + a_m**2 - 2 * a_e * a_m * np.cos(φ_m - φ_e))
+
+    anim.FuncAnimation(fig, _update_plot, φ_e.size, interval=10, blit=True)
 
     plt.show()
 
