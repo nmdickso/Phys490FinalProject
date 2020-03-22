@@ -50,23 +50,15 @@ class Scinet(nn.Module):
 
         # Optimizer and loss functions
         self.optimizer = hyp.optimizer(self.parameters(), hyp.learningRate)
-        self.leadingLoss = hyp.leadingLoss
-        self._defineLoss()
 
-    def _defineLoss(self):
+        self.leadingLoss = hyp.leadingLoss(reduction='sum')
+        self.lossFunct = self._VAE_loss
 
-        if self.leadingLoss == 'BCE':
-            leadingLoss = nn.BCELoss(reduction='sum')
-        else:
-            leadingLoss = nn.MSELoss(reduction='sum')
-
-        def VAE_loss(mu, sig, X_rec, X):
-            leading = leadingLoss(X_rec, X)
-            std = torch.exp(sig.mul_(0.5))
-            D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
-            return leading - D_KL.sum()
-
-        self.lossFunct = VAE_loss
+    def _VAE_loss(self, mu, sig, X_rec, X):
+        leading = self.leadingLoss(X_rec, X)
+        std = torch.exp(sig.mul_(0.5))
+        D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
+        return leading - D_KL.sum()
 
     def encode(self, x):
         # Pass through encoder layers
