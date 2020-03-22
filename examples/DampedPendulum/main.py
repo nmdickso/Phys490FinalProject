@@ -11,7 +11,7 @@ import torch
 # Custom libraries
 import scinet
 
-num_epochs = 5000
+num_epochs = 100
 display_epoch = 100
 learning_rate = 1e-3
 batch_size = 0.05
@@ -169,10 +169,16 @@ def main(input_file):
     ax.set_xlabel("Simulated Position")
     ax.set_ylabel("SciNet Position")
 
-    plt.show()
+    # plt.show()
+
+    # ==============================================================
+    # Visualization!
+    # ==============================================================    
+    
+    plot_loss = model.plot_loss() 
+    plot_latent = model.plot_latent()
 
     return
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
