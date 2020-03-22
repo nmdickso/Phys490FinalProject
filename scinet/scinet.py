@@ -2,8 +2,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as funct
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
 
 class Scinet(nn.Module):
 
@@ -125,8 +124,6 @@ class Scinet(nn.Module):
         avgLoss = 0
         trainSize = len(observations)
         
-        self.latent = np.empty_like(observations)
-
         for i in range(0, trainSize, batchSize):
 
             observationBatch = observations[i:i + batchSize].to(self.device)
@@ -140,10 +137,6 @@ class Scinet(nn.Module):
             self.optimizer.step()
 
             avgLoss += loss.item() * len(observationBatch)
-            
-            # For the Visualization
-            self.epoch_counter += 1
-            self.losses.append(loss.item())
         
         avgLoss /= trainSize
         if verbose:
@@ -174,38 +167,5 @@ class Scinet(nn.Module):
         if verbose:
             print("Testing Loss:", avgLoss)
         return (avgLoss)
-    
-    def plot_loss(self):
-        
-        fig, ax = plt.subplots()
 
-        ax.set_aspect('equal')
-        ax.plot(range(self.epoch_counter), self.losses, color='blue')
-        ax.set_xlabel("Epoch")
-        ax.set_ylabel("Loss")
-        ax.set_title("Graph of Loss per Epoch")
-        plt.savefig('Graph_Epochs_Loss.pdf')
-
-        # plt.show()
-
-    def plot_latent(self):
-       
-        fig = plt.figure()
-        ax1 = fig.add_subplot(121, projection='3d')
-        ax2 = fig.add_subplot(122, projection='3d')
-
-        for i, ax in enumerate((ax1, ax2)):
-
-            # ac = self.act[:, i]
-
-            ax.scatter(self.latent, self.latent, self.act)
-
-            ax.set_title(f'Latent neuron #{i+1}')
-            ax.set_xlabel('Latent_1')
-            ax.set_ylabel('Latent_2')
-            ax.set_zlabel('Activation')
-
-            _set_pi_ticks((ax.xaxis, ax.yaxis))
-
-        plt.show()
 

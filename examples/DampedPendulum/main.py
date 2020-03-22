@@ -173,10 +173,12 @@ def main(input_file):
 
     # ==============================================================
     # Visualization!
-    # ==============================================================    
-    
-    plot_loss = model.plot_loss() 
-    plot_latent = model.plot_latent()
+    # ==============================================================  
+      
+    vis = scinet.visualization
+
+    plot_loss = vis.plot_loss(num_epochs, losses) 
+    plot_latent = vis.plot_latent(spring_consts, damp_consts, activation)
 
     return
 
