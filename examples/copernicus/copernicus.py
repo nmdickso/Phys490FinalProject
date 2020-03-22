@@ -136,7 +136,6 @@ class TimeEvolvedScinet(scinet.Scinet):
 
         # Optimizer and loss functions
         self.optimizer = hyp.optimizer(self.parameters(), hyp.learningRate)
-        self.lossFunct = hyp.lossFunct()
 
     def forward(self, x, first_pass=False):
 
@@ -158,7 +157,7 @@ class TimeEvolvedScinet(scinet.Scinet):
         evolved_latent = x
 
         # Pass through decoder layers (without applying relu on answer neuron)
-        answer = self.decode(x)
+        answer = self.decode(x, torch.tensor([]))
 
         return answer, evolved_latent, μ, σ
 
@@ -249,6 +248,7 @@ if __name__ == '__main__':
     hyp.latentNodes = 2
     hyp.decoderNodes[-1] = 2
     hyp.questionNodes = 0
+    hyp.leadingLoss = torch.nn.MSELoss
 
     N = 17000
     test_N = 1000
