@@ -79,12 +79,26 @@ To extend this problem, we can pose the question: "What would happen if psi cons
 - ``torch``
 - ``tqdm``
 
-### Running the Dampled Pendulum Model
-1. Clone the repository.
-2. pip install '-e.'
-3. Import 'scinet'
+### Installing SciNet
+1. Clone the repository
+2. Navigate to the `scinet` folder
+3. Install SciNet by running `pip install -e .`
 
-Generated data files are stored in the ``data`` directory. Saved models are stored in the ``save`` directory
+### Running the Dampled Pendulum Model
+1. Navigate to the DampedPendulum folder
+2. Generate the data by including the following in the command line:
+`k`: Spring Constant
+`b`: Damping Constant
+The last flag should be the path and name of file to save output data.
+
+OPTIONAL ARGUMENTS:
+`x_0`: Initial position of pendulum
+`v_0`: Initial velocity of pendulum
+`num_points`: Number of time points in series
+`domain`: Range of time values covered
+3. For example:
+`python .\DampedOscillatorGeneration.py --k_range 5 10 100 --b_range 0.5 1 100 -d 0 30 -np 100  C:\Users\xxx\Desktop\Example_Folder`
+
 ### Running the Heliocentrism Model
 
 ### Running the Representation of Qubits Model
