@@ -65,14 +65,14 @@ class Scinet(nn.Module):
             std = torch.exp(sig.mul_(0.5))
             D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
             return leading - D_KL.sum()
-        
+
         self.lossFunct = VAE_loss
 
     def encode(self, x):
         # Pass through encoder layers
         for layer in self.encoder:
             x = funct.relu(layer(x))
-        # Create mu and sig    
+        # Create mu and sig
         mu = self.fc_mu(x)
         sig = self.fc_sig(x)
         # Return them
@@ -102,7 +102,7 @@ class Scinet(nn.Module):
                 Z = funct.relu(Z)
         return Z
 
-    def forward(self, x, question, verbose=False):
+    def forward(self, x, question):
 
         # pass through encoder
         mu, sig = self.encode(x)
@@ -127,7 +127,7 @@ class Scinet(nn.Module):
             questionBatch = questions[i:i + batchSize].to(self.device)
 
             self.zero_grad()
-            mu, sig, Z, outputs = self(observationBatch, questionBatch, verbose=verbose)
+            mu, sig, Z, outputs = self(observationBatch, questionBatch)
             loss = self.lossFunct(mu, sig, outputs, answersBatch)
             loss.backward()
             self.optimizer.step()
@@ -154,7 +154,7 @@ class Scinet(nn.Module):
                 answersBatch = answers[i:i + batchSize].to(self.device)
                 questionBatch = questions[i:i + batchSize].to(self.device)
 
-                mu, sig, Z, outputs = self(observationBatch, questionBatch, verbose=verbose)
+                mu, sig, Z, outputs = self(observationBatch, questionBatch)
                 loss = self.lossFunct(mu, sig, outputs, answersBatch)
 
                 avgLoss += loss.item() * len(observationBatch)
