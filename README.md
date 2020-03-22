@@ -92,11 +92,12 @@ To extend this problem, we can pose the question: "What would happen if psi cons
 The last flag should be the path and name of file to save output data.
 
 OPTIONAL ARGUMENTS:
-`x_0`: Initial position of pendulum
-`v_0`: Initial velocity of pendulum
-`num_points`: Number of time points in series
-`domain`: Range of time values covered
-3. For example:
+- `x_0`: Initial position of pendulum
+- `v_0`: Initial velocity of pendulum
+- `num_points`: Number of time points in series
+- `domain`: Range of time values covered
+
+**For example:**
 `python .\DampedOscillatorGeneration.py --k_range 5 10 100 --b_range 0.5 1 100 -d 0 30 -np 100  C:\Users\xxx\Desktop\Example_Folder`
 
 ### Running the Heliocentrism Model
