@@ -31,7 +31,13 @@ def visualize_latent(φ_e, φ_m, activation):
     for i, ax in enumerate((ax1, ax2)):
         act = activation[:, i]
 
+        # fix for weird jump in latent neuron activation at sin(φ_m) + 2π ?
+        # inds = np.where(φ_m < np.sin(φ_m) + np.pi)
+        # φ_m[inds] = φ_m[inds] + (2 * np.pi)
+
         ax.scatter(φ_e, φ_m, act, c=act)
+        # TODO get rid of outliers (mostly just missed the above correction)
+        # ax.plot_trisurf(φ_e, φ_m, act, cmap='magma')
 
         ax.set_title(f'Latent neuron #{i+1}')
         ax.set_xlabel('φ_e')
@@ -134,15 +140,16 @@ class TimeEvolvedScinet(scinet.Scinet):
 
     def forward(self, x, first_pass=False):
 
+        μ, σ = None, None
+
         # Pass through encoder layers, if the input is not a latent layer
         if first_pass:
 
             # Pass through encoder
-            for layer in self.encoder:
-                x = torch.tanh(layer(x))
+            μ, σ = self.encode(x)
 
-            # Pass through latent layer
-            x = torch.tanh(self.latent(x))
+            # reparamaterize
+            x = self.reparameterize(μ, σ)
 
         # Pass through the time evolution (τ) network
         for _ in range(self.τ_layers):
@@ -151,13 +158,9 @@ class TimeEvolvedScinet(scinet.Scinet):
         evolved_latent = x
 
         # Pass through decoder layers (without applying relu on answer neuron)
-        for layer in self.decoder[:-1]:
-            x = torch.tanh(layer(x))
+        answer = self.decode(x)
 
-        # Answer neurons
-        answer = self.decoder[-1](x)
-
-        return answer, evolved_latent
+        return answer, evolved_latent, μ, σ
 
     def train(self, observations, batch_N):
 
@@ -172,6 +175,7 @@ class TimeEvolvedScinet(scinet.Scinet):
             obs = obs_batch[:, 0, :]
 
             for te_step in range(observations.shape[1] - 1):
+                first_pass = not te_step
 
                 # Target θ given by proceeding observation
                 ans = obs_batch[:, te_step + 1, :]
@@ -179,10 +183,14 @@ class TimeEvolvedScinet(scinet.Scinet):
                 self.zero_grad()
 
                 # Future model input given by evolved latent layers
-                outputs, obs = self(obs, not te_step)
+                outputs, obs, μ, σ = self(obs, first_pass)
 
                 # Loss function and propogation
-                loss = self.lossFunct(outputs, ans)
+                if first_pass:
+                    loss = self.lossFunct(μ, σ, outputs, ans)
+                else:
+                    loss = self.leadingLoss(outputs, ans)
+
                 loss.backward(retain_graph=True)
 
                 self.optimizer.step()
