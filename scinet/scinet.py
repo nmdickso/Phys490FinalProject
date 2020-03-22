@@ -27,7 +27,8 @@ class Scinet(nn.Module):
         inputNodes = hyp.encoderNodes[-1]
         outputNodes = hyp.latentNodes
 
-        # latent = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
+        latent = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
+        self.latent = latent
 
         # Populate decoder
         # Decoder input is question nodes plus latent nodes
@@ -50,17 +51,8 @@ class Scinet(nn.Module):
         # Optimizer and loss functions
         self.optimizer = hyp.optimizer(self.parameters(), hyp.learningRate)
 
-<<<<<<< HEAD
-        # Visualization
-        self.epoch_counter = 0
-        self.losses = []
-        self.act = []
-
-    def _defineLoss(self):
-=======
         self.leadingLoss = hyp.leadingLoss(reduction='sum')
         self.lossFunct = self._VAE_loss
->>>>>>> master
 
     def _VAE_loss(self, mu, sig, X_rec, X):
         leading = self.leadingLoss(X_rec, X)
@@ -119,7 +111,7 @@ class Scinet(nn.Module):
 
         avgLoss = 0
         trainSize = len(observations)
-        
+
         for i in range(0, trainSize, batchSize):
 
             observationBatch = observations[i:i + batchSize].to(self.device)
@@ -133,8 +125,9 @@ class Scinet(nn.Module):
             self.optimizer.step()
 
             avgLoss += loss.item() * len(observationBatch)
-        
+
         avgLoss /= trainSize
+
         if verbose:
             print("Training loss:", avgLoss)
 
@@ -143,25 +136,19 @@ class Scinet(nn.Module):
     def test(self, observations, questions, answers, batchSize, verbose=False):
 
         avgLoss = 0
-        testSize = len(observations)
 
         with torch.no_grad():
 
-            for i in range(0, testSize, batchSize):
+            observations = observations.to(self.device)
+            answers = answers.to(self.device)
+            questions = questions.to(self.device)
 
-                observationBatch = observations[i:i + batchSize].to(self.device)
-                answersBatch = answers[i:i + batchSize].to(self.device)
-                questionBatch = questions[i:i + batchSize].to(self.device)
+            mu, sig, latent_activation, outputs = self(observations, questions)
+            loss = self.lossFunct(mu, sig, outputs, answers)
 
-                mu, sig, Z, outputs = self(observationBatch, questionBatch)
-                loss = self.lossFunct(mu, sig, outputs, answersBatch)
-
-                avgLoss += loss.item() * len(observationBatch)
-
-        avgLoss /= testSize
+            avgLoss = loss.item()
 
         if verbose:
             print("Testing Loss:", avgLoss)
-        return (avgLoss)
 
-
+        return avgLoss, latent_activation
