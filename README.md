@@ -86,19 +86,22 @@ To extend this problem, we can pose the question: "What would happen if psi cons
 
 ### Running the Dampled Pendulum Model
 1. Navigate to the DampedPendulum folder
-2. Generate the data by including the following in the command line:
-`k`: Spring Constant
-`b`: Damping Constant
-The last flag should be the path and name of file to save output data.
+2. *First*, generate the data by including the following in the command line:
+- `k`: Spring Constant
+- `b`: Damping Constant
+- The last flag should be the path and name of file to save output data.
 
-OPTIONAL ARGUMENTS:
+Optional Arguements:
 - `x_0`: Initial position of pendulum
 - `v_0`: Initial velocity of pendulum
 - `num_points`: Number of time points in series
 - `domain`: Range of time values covered
 
 **For example:**
-`python .\DampedOscillatorGeneration.py --k_range 5 10 100 --b_range 0.5 1 100 -d 0 30 -np 100  C:\Users\xxx\Desktop\Example_Folder`
+- `python .\DampedOscillatorGeneration.py --k_range 5 10 100 --b_range 0.5 1 100 -d 0 30 -np 100  C:\Users\xxx\Desktop\Example_Folder`
+
+3. To run the example itself, enter the path to where the output data was saved. **For example**:
+- `python main.py C:\Users\xxx\Desktop\Example_Folder`
 
 ### Running the Heliocentrism Model
 
