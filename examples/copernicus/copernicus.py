@@ -216,17 +216,22 @@ class TimeEvolvedScinet(scinet.Scinet):
             obs = observations[:, 0, :]
 
             for te_step in range(observations.shape[1] - 1):
+                first_pass = not te_step
 
                 # Target θ given by proceeding observation
                 ans = observations[:, te_step + 1, :]
 
                 # future forward function input is given by te'd latent layers
-                model_ans, obs = self(obs, not te_step)
+                model_ans, obs, μ, σ = self(obs, first_pass)
 
                 model_θ[:, te_step + 1, :] = model_ans
                 model_φ[:, te_step + 1, :] = obs
 
-                loss = self.lossFunct(model_ans, ans)
+                # Loss function and propogation
+                if first_pass:
+                    loss = self.lossFunct(μ, σ, model_ans, ans)
+                else:
+                    loss = self.leadingLoss(model_ans, ans)
 
                 avgLoss += loss.item()
 
