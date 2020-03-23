@@ -24,13 +24,14 @@ def plot_latent(latent1, latent2, activation):
 
     for i, ax in enumerate((ax1, ax2)):
 
-        ax.scatter(latent1, latent2, activation.detach())
+        act = activation[:, i]
+
+        ax.scatter(latent1, latent2, act, c = act)
 
         ax.set_title(f'Latent neuron #{i+1}')
         ax.set_xlabel('Latent_1')
         ax.set_ylabel('Latent_2')
         ax.set_zlabel('Activation')
-
-        _set_pi_ticks((ax.xaxis, ax.yaxis))
+        plt.savefig('Graph_Latent_Ativation.pdf')
 
     plt.show()

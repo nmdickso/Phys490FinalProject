@@ -130,12 +130,11 @@ class Scinet(nn.Module):
 
         return (avgLoss)
 
-    def test(self, observations, questions, answers, batchSize, verbose=False):
+    def test(self, observations, questions, answers, verbose=False):
 
         avgLoss = 0
 
         with torch.no_grad():
-
             observations = observations.to(self.device)
             answers = answers.to(self.device)
             questions = questions.to(self.device)

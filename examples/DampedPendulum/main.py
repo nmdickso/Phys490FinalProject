@@ -120,7 +120,7 @@ def train_SciNet(model, train_O, train_Q, train_A):
         tmp_train_O = train_O[tmp_train_inds, :]
         tmp_train_Q = train_Q[tmp_train_inds, :]
         tmp_train_A = train_A[tmp_train_inds, :]
-
+        
         tmploss = model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
         losses.append(tmploss)
 
@@ -133,28 +133,7 @@ def train_SciNet(model, train_O, train_Q, train_A):
 def test_SciNet(model, test_O, test_Q, test_A):
     print("\nTesting Model...")
 
-    n_observations = test_O.shape[0]
-    batch_length = int(np.ceil(batch_size * n_observations))
-    test_inds = np.array(list(range(n_observations)))
-
-    losses = []
-    activation = []
-    for epoch in range(num_epochs):
-
-        tmp_test_inds = list(
-            np.random.choice(
-                test_inds,
-                size=(batch_length),
-                replace=False
-            )
-        )
-        tmp_test_O = test_O[tmp_test_inds, :]
-        tmp_test_Q = test_Q[tmp_test_inds, :]
-        tmp_test_A = test_A[tmp_test_inds, :]
-
-        tmploss, tmpactivation = model.test(tmp_test_O, tmp_test_Q, tmp_test_A, batch_length)
-        losses.append(tmploss)
-        activation.append(tmpactivation)
+    losses, activation = model.test(test_O, test_Q,  test_A)
 
     return losses, activation
 
@@ -164,6 +143,7 @@ def main(input_file):
     # Load the data from the generated file
     # ==============================================================
     spring_consts, damp_consts, O = load_data(input_file)
+
     train_O, test_O, train_Q, test_Q, train_A, test_A = split_and_format_data(O)
     n_points = train_O.shape[1]
 
@@ -187,19 +167,19 @@ def main(input_file):
     # Test time!
     # ==============================================================    
     model_A = model.forward(test_O, test_Q)[-1].detach().numpy().ravel()
-    test_A = test_A.numpy().ravel()
+    testy_A = test_A.numpy().ravel()
 
     fig, ax = plt.subplots()
 
     ax.set_aspect('equal')
     ax.plot([-1, 1], [-1, 1], 'k-')
-    ax.plot(test_A, model_A, 'bo')
+    ax.plot(testy_A, model_A, 'bo')
     ax.set_xlabel("Simulated Position")
     ax.set_ylabel("SciNet Position")
 
     # plt.show()
 
-    avgLoss, activation = test_SciNet(model, train_O, train_Q, train_A)
+    avgLoss, activation = test_SciNet(model, test_O, test_Q, test_A)
 
     # ==============================================================
     # Visualization!
@@ -208,7 +188,7 @@ def main(input_file):
     vis = scinet.visualization
 
     plot_loss = vis.plot_loss(num_epochs, losses) 
-    plot_latent = vis.plot_latent(spring_consts, damp_consts, activation)
+    plot_latent = vis.plot_latent(param1, param2, activation)
 
     return
 
