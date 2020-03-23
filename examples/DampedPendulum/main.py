@@ -183,8 +183,8 @@ def main(input_file):
     # Visualization!
     # ==============================================================
 
-    plot_loss = scinet.plot_loss(num_epochs, losses) 
-    plot_latent = scinet.plot_latent(param1, param2, activation)
+    scinet.plot_loss(losses, filename='Epochs_Loss.pdf')
+    scinet.plot_latent(param1, param2, activation, 'Latent_Activation.pdf')
 
     return
 
