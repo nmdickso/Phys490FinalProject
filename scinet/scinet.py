@@ -1,4 +1,3 @@
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as funct
@@ -26,9 +25,6 @@ class Scinet(nn.Module):
         # Add latent layer
         inputNodes = hyp.encoderNodes[-1]
         outputNodes = hyp.latentNodes
-
-        latent = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
-        self.latent = latent
 
         # Populate decoder
         # Decoder input is question nodes plus latent nodes
@@ -133,27 +129,21 @@ class Scinet(nn.Module):
 
         return (avgLoss)
 
-    def test(self, observations, questions, answers, batchSize, verbose=False):
+    def test(self, observations, questions, answers, verbose=False):
 
         avgLoss = 0
-        testSize = len(observations)
 
         with torch.no_grad():
-            # for i in tqdm(range(0, testSize, batchSize)):
-            for i in range(0, testSize, batchSize):
+            observations = observations.to(self.device)
+            answers = answers.to(self.device)
+            questions = questions.to(self.device)
 
-                observationBatch = observations[i:i + batchSize].to(self.device)
-                answersBatch = answers[i:i + batchSize].to(self.device)
-                questionBatch = questions[i:i + batchSize].to(self.device)
+            mu, sig, latent_activation, outputs = self(observations, questions)
+            loss = self.lossFunct(mu, sig, outputs, answers)
 
-                mu, sig, Z, outputs = self(observationBatch, questionBatch)
-                loss = self.lossFunct(mu, sig, outputs, answersBatch)
-
-                avgLoss += loss.item() * len(observationBatch)
-
-        avgLoss /= testSize
+            avgLoss = loss.item()
 
         if verbose:
             print("Testing Loss:", avgLoss)
 
-        return (avgLoss)
+        return avgLoss, latent_activation
