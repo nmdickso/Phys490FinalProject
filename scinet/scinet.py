@@ -27,9 +27,6 @@ class Scinet(nn.Module):
         inputNodes = hyp.encoderNodes[-1]
         outputNodes = hyp.latentNodes
 
-        latent = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
-        self.latent = latent
-
         # Populate decoder
         # Decoder input is question nodes plus latent nodes
         self.decoder = nn.ModuleList()

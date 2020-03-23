@@ -24,9 +24,7 @@ def plot_latent(latent1, latent2, activation):
 
     for i, ax in enumerate((ax1, ax2)):
 
-        ac = self.act[:, i]
-
-        ax.scatter(latent1, latent2, activation, c=ac)
+        ax.scatter(latent1, latent2, activation.detach())
 
         ax.set_title(f'Latent neuron #{i+1}')
         ax.set_xlabel('Latent_1')
