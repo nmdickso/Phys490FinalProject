@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_loss(num_epochs, losses):
-    
+
     fig, ax = plt.subplots()
 
     ax.set_aspect('equal')
@@ -16,8 +15,9 @@ def plot_loss(num_epochs, losses):
 
     # plt.show()
 
+
 def plot_latent(latent1, latent2, activation):
-    
+
     fig = plt.figure()
     ax1 = fig.add_subplot(121, projection='3d')
     ax2 = fig.add_subplot(122, projection='3d')
@@ -26,7 +26,7 @@ def plot_latent(latent1, latent2, activation):
 
         act = activation[:, i]
 
-        ax.scatter(latent1, latent2, act, c = act)
+        ax.scatter(latent1, latent2, act, c=act)
 
         ax.set_title(f'Latent neuron #{i+1}')
         ax.set_xlabel('Latent_1')

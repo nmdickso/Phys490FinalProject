@@ -1,7 +1,5 @@
 # Standard library imports
 import argparse
-import sys
-import os
 
 # Additional dependancies
 import matplotlib.pyplot as plt
@@ -32,7 +30,7 @@ def load_data(input_file):
             else:
                 spring_consts.append(line[0])
                 damp_consts.append(line[1])
-                position.append(np.array(line[2:]))            
+                position.append(np.array(line[2:]))
 
     n_data = len(position)
     n_points = len(t)
@@ -53,8 +51,8 @@ def split_and_format_data(O):
     n_observations, n_points, _ = O.shape
 
     # create questions and answers
-    questions_inds = np.random.randint(0, n_points, size=(n_observations,))
-    QA = np.array([O[i, j, :] for i, j in zip(range(n_observations), questions_inds)])
+    Q_inds = np.random.randint(0, n_points, size=(n_observations,))
+    QA = np.array([O[i, j, :] for i, j in zip(range(n_observations), Q_inds)])
     Q = np.array([[i] for i in QA[:, 0]])
     A = np.array([[i] for i in QA[:, 1]])
     O = O[:, :, 1]
@@ -120,12 +118,12 @@ def train_SciNet(model, train_O, train_Q, train_A):
         tmp_train_O = train_O[tmp_train_inds, :]
         tmp_train_Q = train_Q[tmp_train_inds, :]
         tmp_train_A = train_A[tmp_train_inds, :]
-        
-        tmploss = model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
-        losses.append(tmploss)
+
+        loss = model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
+        losses.append(loss)
 
         if (not (epoch) % display_epoch):
-            print(f"EPOCH: {epoch:02d} of {num_epochs}.\tLOSS: {tmploss}")
+            print(f"EPOCH: {epoch:02d} of {num_epochs}.\tLOSS: {loss}")
 
     return losses
 
@@ -133,7 +131,7 @@ def train_SciNet(model, train_O, train_Q, train_A):
 def test_SciNet(model, test_O, test_Q, test_A):
     print("\nTesting Model...")
 
-    losses, activation = model.test(test_O, test_Q,  test_A)
+    losses, activation = model.test(test_O, test_Q, test_A)
 
     return losses, activation
 
@@ -165,7 +163,7 @@ def main(input_file):
 
     # ==============================================================
     # Test time!
-    # ==============================================================    
+    # ==============================================================
     model_A = model.forward(test_O, test_Q)[-1].detach().numpy().ravel()
     testy_A = test_A.numpy().ravel()
 
@@ -183,14 +181,13 @@ def main(input_file):
 
     # ==============================================================
     # Visualization!
-    # ==============================================================  
-      
-    vis = scinet.visualization
+    # ==============================================================
 
-    plot_loss = vis.plot_loss(num_epochs, losses) 
-    plot_latent = vis.plot_latent(param1, param2, activation)
+    plot_loss = scinet.plot_loss(num_epochs, losses) 
+    plot_latent = scinet.plot_latent(param1, param2, activation)
 
     return
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
