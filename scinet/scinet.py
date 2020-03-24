@@ -1,4 +1,3 @@
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as funct
@@ -27,9 +26,6 @@ class Scinet(nn.Module):
         inputNodes = hyp.encoderNodes[-1]
         outputNodes = hyp.latentNodes
 
-        latent = nn.Linear(hyp.encoderNodes[-1], hyp.latentNodes)
-        self.latent = latent
-
         # Populate decoder
         # Decoder input is question nodes plus latent nodes
         self.decoder = nn.ModuleList()
@@ -50,29 +46,21 @@ class Scinet(nn.Module):
 
         # Optimizer and loss functions
         self.optimizer = hyp.optimizer(self.parameters(), hyp.learningRate)
-        self.leadingLoss = hyp.leadingLoss
-        self._defineLoss()
 
-    def _defineLoss(self):
+        self.leadingLoss = hyp.leadingLoss(reduction='sum')
+        self.lossFunct = self._VAE_loss
 
-        if self.leadingLoss == 'BCE':
-            leadingLoss = nn.BCELoss(reduction='sum')
-        else:
-            leadingLoss = nn.MSELoss(reduction='sum')
-
-        def VAE_loss(mu, sig, X_rec, X):
-            leading = leadingLoss(X_rec, X)
-            std = torch.exp(sig.mul_(0.5))
-            D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
-            return leading - D_KL.sum()
-        
-        self.lossFunct = VAE_loss
+    def _VAE_loss(self, mu, sig, X_rec, X):
+        leading = self.leadingLoss(X_rec, X)
+        std = torch.exp(sig.mul_(0.5))
+        D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
+        return leading - D_KL.sum()
 
     def encode(self, x):
         # Pass through encoder layers
         for layer in self.encoder:
             x = funct.relu(layer(x))
-        # Create mu and sig    
+        # Create mu and sig
         mu = self.fc_mu(x)
         sig = self.fc_sig(x)
         # Return them
@@ -102,7 +90,7 @@ class Scinet(nn.Module):
                 Z = funct.relu(Z)
         return Z
 
-    def forward(self, x, question, verbose=False):
+    def forward(self, x, question):
 
         # pass through encoder
         mu, sig = self.encode(x)
@@ -127,7 +115,7 @@ class Scinet(nn.Module):
             questionBatch = questions[i:i + batchSize].to(self.device)
 
             self.zero_grad()
-            mu, sig, Z, outputs = self(observationBatch, questionBatch, verbose=verbose)
+            mu, sig, Z, outputs = self(observationBatch, questionBatch)
             loss = self.lossFunct(mu, sig, outputs, answersBatch)
             loss.backward()
             self.optimizer.step()
@@ -141,27 +129,21 @@ class Scinet(nn.Module):
 
         return (avgLoss)
 
-    def test(self, observations, questions, answers, batchSize, verbose=False):
+    def test(self, observations, questions, answers, verbose=False):
 
         avgLoss = 0
-        testSize = len(observations)
 
         with torch.no_grad():
-            # for i in tqdm(range(0, testSize, batchSize)):
-            for i in range(0, testSize, batchSize):
+            observations = observations.to(self.device)
+            answers = answers.to(self.device)
+            questions = questions.to(self.device)
 
-                observationBatch = observations[i:i + batchSize].to(self.device)
-                answersBatch = answers[i:i + batchSize].to(self.device)
-                questionBatch = questions[i:i + batchSize].to(self.device)
+            mu, sig, latent_activation, outputs = self(observations, questions)
+            loss = self.lossFunct(mu, sig, outputs, answers)
 
-                mu, sig, Z, outputs = self(observationBatch, questionBatch, verbose=verbose)
-                loss = self.lossFunct(mu, sig, outputs, answersBatch)
-
-                avgLoss += loss.item() * len(observationBatch)
-
-        avgLoss /= testSize
+            avgLoss = loss.item()
 
         if verbose:
             print("Testing Loss:", avgLoss)
 
-        return (avgLoss)
+        return avgLoss, latent_activation

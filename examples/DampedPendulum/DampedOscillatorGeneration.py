@@ -1,11 +1,9 @@
 # Standard library imports
 import itertools
 import argparse
-import math
 
 # Dependencies
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Script Defaults
 DEFAULT_DOMAIN = [0, 4]
@@ -50,7 +48,7 @@ def damped_oscillator(
 
     # Solve for all position/velocities
     for i in range(1, num_points):
-        v[i] = v[i - 1] + dt * (-k * x[i -1] - b * v[i - 1])
+        v[i] = v[i - 1] + dt * (-k * x[i - 1] - b * v[i - 1])
         x[i] = x[i - 1] + dt * v[i]
 
     # Return time, position and velocity
@@ -84,9 +82,10 @@ def main(
     with open(output_file, 'w') as f:
         str_t = [f"{i:.6f}" for i in t]
         newline = " ".join(str_t) + "\n"
-        f.write(newline)        
+        f.write(newline)
         for k, b in all_kb_pairs:
-            _, x, _ = damped_oscillator(k, b, domain=domain, num_points=num_points, x_0=x_0, v_0=v_0)
+            _, x, _ = damped_oscillator(k, b, domain=domain,
+                                        num_points=num_points, x_0=x_0, v_0=v_0)
             newline = [f"{k:.6f}", f"{b:.6f}"] + [f"{i:.6f}" for i in x]
             newline = " ".join(newline) + "\n"
             f.write(newline)
@@ -95,7 +94,8 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='To generate damped oscillator values for SciNet examples')
+    parser = argparse.ArgumentParser(description='To generate damped oscillator'
+                                     ' values for SciNet examples')
     parser.add_argument(
         'output_file',
         type=str,
@@ -105,7 +105,8 @@ if __name__ == "__main__":
         '--k_range',
         nargs=3,
         type=float,
-        help='range and number of spring constants, e.g. (min, max, total number)',
+        help='range and number of spring constants, '
+             'e.g. (min, max, total number)',
         required=False,
         default=[5, 10, 25]
     )
@@ -113,7 +114,8 @@ if __name__ == "__main__":
         '--b_range',
         nargs=3,
         type=float,
-        help='range and number of damping constants, e.g. (min, max, total number)',
+        help='range and number of damping constants, '
+             'e.g. (min, max, total number)',
         required=False,
         default=[0, 1, 25]
     )
@@ -162,6 +164,5 @@ if __name__ == "__main__":
     x_0 = args.initial_position
     v_0 = args.initial_velocity
 
-    main(output_file, k_tup, b_tup, domain=domain, num_points=num_points, x_0=x_0, v_0=v_0)
-
-
+    main(output_file, k_tup, b_tup,
+         domain=domain, num_points=num_points, x_0=x_0, v_0=v_0)

@@ -1,7 +1,5 @@
 # Standard library imports
 import argparse
-import sys
-import os
 
 # Additional dependancies
 import matplotlib.pyplot as plt
@@ -11,7 +9,11 @@ import torch
 # Custom libraries
 import scinet
 
+<<<<<<< HEAD
 num_epochs = 1000
+=======
+num_epochs = 100
+>>>>>>> 6fda301ee9a2f6d87f96e0e2e6f8e4f4d56d2cd0
 display_epoch = 100
 learning_rate = 1e-3
 batch_size = 0.3
@@ -32,7 +34,7 @@ def load_data(input_file):
             else:
                 spring_consts.append(line[0])
                 damp_consts.append(line[1])
-                position.append(np.array(line[2:]))            
+                position.append(np.array(line[2:]))
 
     n_data = len(position)
     n_points = len(t)
@@ -53,8 +55,8 @@ def split_and_format_data(O):
     n_observations, n_points, _ = O.shape
 
     # create questions and answers
-    questions_inds = np.random.randint(0, n_points, size=(n_observations,))
-    QA = np.array([O[i, j, :] for i, j in zip(range(n_observations), questions_inds)])
+    Q_inds = np.random.randint(0, n_points, size=(n_observations,))
+    QA = np.array([O[i, j, :] for i, j in zip(range(n_observations), Q_inds)])
     Q = np.array([[i] for i in QA[:, 0]])
     A = np.array([[i] for i in QA[:, 1]])
     O = O[:, :, 1]
@@ -97,7 +99,6 @@ def load_hyperparams(n_points):
     # Set learning rate
     params.learningRate = learning_rate
 
-    params.leadingLoss = 'MSE'
     return params
 
 
@@ -122,13 +123,21 @@ def train_SciNet(model, train_O, train_Q, train_A):
         tmp_train_Q = train_Q[tmp_train_inds, :]
         tmp_train_A = train_A[tmp_train_inds, :]
 
-        tmploss = model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
-        losses.append(tmploss)
+        loss = model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
+        losses.append(loss)
 
         if (not (epoch) % display_epoch):
-            print(f"EPOCH: {epoch:02d} of {num_epochs}.\tLOSS: {tmploss}")
+            print(f"EPOCH: {epoch:02d} of {num_epochs}.\tLOSS: {loss}")
 
     return losses
+
+
+def test_SciNet(model, test_O, test_Q, test_A):
+    print("\nTesting Model...")
+
+    losses, activation = model.test(test_O, test_Q, test_A)
+
+    return losses, activation
 
 
 def main(input_file):
@@ -136,6 +145,7 @@ def main(input_file):
     # Load the data from the generated file
     # ==============================================================
     spring_consts, damp_consts, O = load_data(input_file)
+
     train_O, test_O, train_Q, test_Q, train_A, test_A = split_and_format_data(O)
     n_points = train_O.shape[1]
 
@@ -157,19 +167,28 @@ def main(input_file):
 
     # ==============================================================
     # Test time!
-    # ==============================================================    
+    # ==============================================================
     model_A = model.forward(test_O, test_Q)[-1].detach().numpy().ravel()
-    test_A = test_A.numpy().ravel()
+    testy_A = test_A.numpy().ravel()
 
     fig, ax = plt.subplots()
 
     ax.set_aspect('equal')
     ax.plot([-1, 1], [-1, 1], 'k-')
-    ax.plot(test_A, model_A, 'bo')
+    ax.plot(testy_A, model_A, 'bo')
     ax.set_xlabel("Simulated Position")
     ax.set_ylabel("SciNet Position")
 
-    plt.show()
+    # plt.show()
+
+    avgLoss, activation = test_SciNet(model, test_O, test_Q, test_A)
+
+    # ==============================================================
+    # Visualization!
+    # ==============================================================
+
+    scinet.plot_loss(losses, filename='Epochs_Loss.pdf')
+    scinet.plot_latent(param1, param2, activation, 'Latent_Activation.pdf')
 
     return
 
