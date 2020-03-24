@@ -11,10 +11,10 @@ import torch
 # Custom libraries
 import scinet
 
-num_epochs = 5000
+num_epochs = 1000
 display_epoch = 100
 learning_rate = 1e-3
-batch_size = 0.05
+batch_size = 0.3
 
 
 def load_data(input_file):
@@ -84,14 +84,14 @@ def load_hyperparams(n_points):
     params = scinet.Hyperparameters()
 
     # Set encoder layers
-    params.encoderNodes = [n_points, 300, 300]
+    params.encoderNodes = [n_points, 1000, 1000, 1000]
     params.encoderLayers = len(params.encoderNodes)
 
     # Set Latent nodes
     params.latentNodes = 3
 
     # Set decoder layers
-    params.decoderNodes = [300, 300, 1]
+    params.decoderNodes = [1000, 1000, 1000, 1]
     params.decoderLayers = len(params.decoderNodes)
 
     # Set learning rate
