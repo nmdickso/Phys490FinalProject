@@ -9,7 +9,6 @@ class Scinet(nn.Module):
 
     def __init__(self, hyp):
         super().__init__()
-
         # Populate encoder
         self.encoder = nn.ModuleList()
         for i in range(0, hyp.encoderLayers - 1):
@@ -56,12 +55,13 @@ class Scinet(nn.Module):
         # Pass through encoder layers
         for layer in self.encoder:
             x = funct.relu(layer(x))
-
+        print(x)
         # Pass through latent layer
         x = funct.relu(self.latent(x))
-
+        print(x)
         # Concatenate output of encoder with question
         x = torch.cat((question, x), dim=-1)
+        
 
         # Pass through decoder layers (without applying relu on answer neuron)
         lastDecoderLayer = len(self.decoder) - 1

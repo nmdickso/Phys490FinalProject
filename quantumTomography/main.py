@@ -29,9 +29,11 @@ def editHyp(hyp):
         hyp.decoderLayers=len(hyp.decoderNodes)
 
         hyp.testSize=1000
-        hyp.trainBatchSize=10
-        hyp.testBatchSize=10
-        hyp.epochs=5
+        hyp.trainBatchSize=1
+        hyp.testBatchSize=1
+        hyp.epochs=2
+
+        hyp.latentNodes = 2
 
 
 if __name__ == "__main__":
@@ -44,9 +46,10 @@ if __name__ == "__main__":
 
     trainingData,testingData=getDataArray(cfg.dataPath+"1.npy",hyp)
     net=Scinet(hyp)
-    trainer=Trainer(trainingData,testingData)
+    print(net.latent)
+    #trainer=Trainer(trainingData,testingData)
     
 
-    trainer.trainAndTest(net,hyp)
+    #trainer.trainAndTest(net,hyp)
 
     
