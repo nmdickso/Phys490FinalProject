@@ -1,10 +1,11 @@
 import scinet
 import data_gen
 
+import argparse
+
 import tqdm
 import torch
 import numpy as np
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import FuncFormatter, MultipleLocator
@@ -242,29 +243,46 @@ class TimeEvolvedScinet(scinet.Scinet):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-M', default=5, help="Number of timesteps")
+    parser.add_argument('-N', default=15000, help="Training dataset size")
+    parser.add_argument('--test-N', default=1000, help="Testing dataset size")
+    parser.add_argument('-t', '--del-t', default=7, help="Timestep size (days)")
+
+    parser.add_argument('-a', default=0.001, help="Learning rate (α)")
+    parser.add_argument('-b', default=2000, help="Training batch size")
+    parser.add_argument('-E', default=25, help="Number of training epochs")
+
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('--plot-loss', action='store_true', help='Show loss')
+
+    args = parser.parse_args()
+
     hyp = scinet.Hyperparameters()
-    hyp.learningRate = 0.001
+    hyp.learningRate = args.a
     hyp.encoderNodes[0] = 2
     hyp.latentNodes = 2
     hyp.decoderNodes[-1] = 2
     hyp.questionNodes = 0
     hyp.leadingLoss = torch.nn.MSELoss
 
-    N = 17000
-    test_N = 1000
-    M = 5
-    del_t = 7  # days per step
+    N = args.N
+    test_N = args.test_N
+    M = args.M
+    del_t = args.del_t
 
-    batch_size = 2000
+    batch_size = args.b
+    epochs = range(args.E) if not args.verbose else tqdm.tqdm(range(25))
 
     model = TimeEvolvedScinet(hyp)
 
     φ_e, φ_m, θ_e, θ_m = data_gen.generate_orbits(N, M, del_t)
 
-    data_gen.anim_orbit(φ_e, φ_m, θ_e, θ_m)
+    # data_gen.anim_orbit(φ_e, φ_m, θ_e, θ_m)
 
     loss = []
-    for i in tqdm.tqdm(range(25)):
+    for _ in epochs:
 
         # Observation are all the elements of θ
         obs = torch.from_numpy(np.concatenate(
@@ -273,8 +291,9 @@ if __name__ == '__main__':
 
         loss.append(model.train(obs, batch_size))
 
-    plt.plot(loss)
-    plt.show()
+    if args.plot_loss:
+        plt.plot(loss)
+        plt.show()
 
     # Test
     φ_et, φ_mt, θ_et, θ_mt = data_gen.generate_orbits(test_N, M, del_t)
