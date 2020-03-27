@@ -11,7 +11,7 @@ import torch
 import scinet
 import utils as u
 
-num_epochs = 300
+num_epochs = 500
 display_epoch = 20
 learning_rate = 1e-2
 batch_size = 0.01
