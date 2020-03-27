@@ -55,10 +55,8 @@ class Scinet(nn.Module):
         # Pass through encoder layers
         for layer in self.encoder:
             x = funct.relu(layer(x))
-        print(x)
         # Pass through latent layer
         x = funct.relu(self.latent(x))
-        print(x)
         # Concatenate output of encoder with question
         x = torch.cat((question, x), dim=-1)
         
