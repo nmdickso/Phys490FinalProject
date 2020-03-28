@@ -105,4 +105,25 @@ Optional Arguements:
 
 ### Running the Heliocentrism Model
 
+To run the Copernican Heliocentrism example:
+
+```
+python examples/copernicus/copernicus.py [-h] [FLAGS] [OPTIONS]
+```
+
+Optional Arguments:
+- `-M M`: Number of time-evolution steps [default=5]
+- `-N N`: Training dataset size [default=15000]
+- `--test-N TEST_N`: Testing dataset size [default=1000]
+- `-t DEL_T, --del-t DEL_T`: Number of days per time-evolution step [default=7]
+
+- `-a A`: Learning rate (α) [default=0.001]
+- `-b B`: Training batch size [default=2000]
+- `-E E`: Number of training epochs [default=25]
+
+Optional Flags:
+- `-B, --beta-anneal`: Utilize 'Beta-Annealing'
+- `-v, --verbose`: Print out a progress bar and loss values during training
+- `--plot-loss`: Show a plot of loss over training epochs
+
 ### Running the Representation of Qubits Model
