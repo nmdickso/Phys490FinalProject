@@ -11,7 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 
 
-def _set_pi_ticks(axis_list):
+def _set_pi_ticks(*axis_list):
 
     for axis in axis_list:
 
@@ -20,34 +20,6 @@ def _set_pi_ticks(axis_list):
             '{:.0g}$\pi$'.format(val / np.pi) if val else '0'
         ))
         axis.set_major_locator(MultipleLocator(base=np.pi))
-
-
-def visualize_latent(φ_e, φ_m, activation):
-    '''activation M=2'''
-
-    fig = plt.figure()
-    ax1 = fig.add_subplot(121, projection='3d')
-    ax2 = fig.add_subplot(122, projection='3d')
-
-    for i, ax in enumerate((ax1, ax2)):
-        act = activation[:, i]
-
-        # fix for weird jump in latent neuron activation at sin(φ_m) + 2π ?
-        # inds = np.where(φ_m < np.sin(φ_m) + np.pi)
-        # φ_m[inds] = φ_m[inds] + (2 * np.pi)
-
-        ax.scatter(φ_e, φ_m, act, c=act)
-        # TODO get rid of outliers (mostly just missed the above correction)
-        # ax.plot_trisurf(φ_e, φ_m, act, cmap='magma')
-
-        ax.set_title(f'Latent neuron #{i+1}')
-        ax.set_xlabel('φ_e')
-        ax.set_ylabel('φ_m')
-        ax.set_zlabel('activation')
-
-        _set_pi_ticks((ax.xaxis, ax.yaxis))
-
-    plt.show()
 
 
 def visualize_sample(obs_θ, obs_φ, model_θ, model_φ):
@@ -118,7 +90,7 @@ def visualize_sample(obs_θ, obs_φ, model_θ, model_φ):
 
     fig.legend(lines, ['Observations', 'Model'])
 
-    _set_pi_ticks((ax3.yaxis, ax4.yaxis))
+    _set_pi_ticks(ax3.yaxis, ax4.yaxis)
 
     anim.FuncAnimation(fig, _update_plot, model_θ.shape[0], blit=True)
 
@@ -246,18 +218,27 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-M', default=5, help="Number of timesteps")
-    parser.add_argument('-N', default=15000, help="Training dataset size")
-    parser.add_argument('--test-N', default=1000, help="Testing dataset size")
-    parser.add_argument('-t', '--del-t', default=7, help="Timestep size (days)")
+    parser.add_argument('-M', type=int, default=5,
+                        help="Number of time-evolution steps")
+    parser.add_argument('-N', type=int, default=15000,
+                        help="Training dataset size")
+    parser.add_argument('--test-N', type=int, default=1000,
+                        help="Testing dataset size")
+    parser.add_argument('-t', '--del-t', type=int, default=7,
+                        help="Number of days per time-evolution step")
 
-    parser.add_argument('-a', default=0.001, help="Learning rate (α)")
-    parser.add_argument('-b', default=2000, help="Training batch size")
-    parser.add_argument('-E', default=25, help="Number of training epochs")
-    parser.add_argument('-B', '--beta-anneal', action='store_true')
+    parser.add_argument('-a', type=float, default=0.001,
+                        help="Learning rate (α)")
+    parser.add_argument('-b', type=int, default=2000,
+                        help="Training batch size")
+    parser.add_argument('-E', type=int, default=25,
+                        help="Number of training epochs")
+    parser.add_argument('-B', '--beta-anneal', action='store_true',
+                        help="Whether to use 'Beta-Annealing'")
 
     parser.add_argument('-v', '--verbose', action='store_true')
-    parser.add_argument('--plot-loss', action='store_true', help='Show loss')
+    parser.add_argument('--plot-loss', action='store_true',
+                        help='Show a plot of loss over training epochs')
 
     args = parser.parse_args()
 
@@ -272,9 +253,9 @@ if __name__ == '__main__':
         hyp.annealEpoch = 1e8
 
     N = args.N
-    test_N = args.test_N
     M = args.M
     del_t = args.del_t
+    test_N = args.test_N
 
     batch_size = args.b
     epochs = tqdm.tqdm(range(args.E), disable=(not args.verbose),
@@ -319,5 +300,22 @@ if __name__ == '__main__':
 
     visualize_sample(test_θ, test_φ, out_θ, out_φ)
 
-    visualize_latent(φ_et[:, 0], φ_mt[:, 0], out_φ[:, 0, :])
-    visualize_latent(φ_et[:, -1], φ_mt[:, -1], out_φ[:, -1, :])
+    # ----------------------------------------------------------------------
+    # Fix and plot activation
+    # ----------------------------------------------------------------------
+
+    last_φ_e, last_φ_m, last_φ_out = φ_et[:, -1], φ_mt[:, -1], out_φ[:, -1, :]
+
+    inds = np.where(last_φ_m >= np.sin(last_φ_m) + np.pi)
+    φ_mt[inds] = φ_mt[inds] - (2 * np.pi)
+
+    plot_kwargs = {"method": 'scatter', "axlabels": ['φ_e', 'φ_m'],
+                   "axis_formatter": _set_pi_ticks}
+
+    scinet.plot_latent(last_φ_e, last_φ_m, last_φ_out, **plot_kwargs)
+
+    # TODO this still misses a few outliers, it's clear sin(φ)+π isn't exactly
+    #   right. maybe need to look at the data gen to see what kind of functions
+    #   maybe it should actually be based on theta
+
+    plt.show()

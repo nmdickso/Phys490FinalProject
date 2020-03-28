@@ -9,6 +9,16 @@ a_e = 1.
 a_m = 1.52366231
 
 
+def tau_modulate(α):
+    '''[0, 2π]'''
+    return (α + 2 * np.pi) % (2 * np.pi)
+
+
+def pi_modulate(α):
+    '''[-π, π]'''
+    return tau_modulate(α) - np.pi
+
+
 def anim_orbit(φ_e, φ_m, θ_e, θ_m):
     '''show an animated orbit example, of both viewpoints
     only uses the first row of the datasets, for ease
@@ -101,5 +111,9 @@ def generate_orbits(N, M, del_t):
 
     θ_m = np.angle(cos_θ + 1j * sin_θ)
     θ_e = φ_e
+
+    # Only seems to fix but then add extra outliers to the sin solution
+    # φ_e, φ_m = pi_modulate(φ_e), pi_modulate(φ_m)
+    # θ_e, θ_m = pi_modulate(θ_e), pi_modulate(θ_m)
 
     return φ_e, φ_m, θ_e, θ_m

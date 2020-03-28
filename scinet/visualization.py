@@ -31,9 +31,9 @@ def plot_latent(param1, param2, activation, filename=None,
         ax = fig.add_subplot(1, num_activations, i + 1, projection='3d')
 
         ax.set_title(f'Latent neuron #{i+1}')
-        ax.set_xlabel(axlabels[0:1] or 'Parameter 1')
-        ax.set_ylabel(axlabels[1:2] or 'Parameter 2')
-        ax.set_zlabel(axlabels[2:3] or 'Activation')
+        ax.set_xlabel((axlabels[0:1] or ['Parameter 1'])[0])
+        ax.set_ylabel((axlabels[1:2] or ['Parameter 2'])[0])
+        ax.set_zlabel((axlabels[2:3] or ['Activation'])[0])
 
         if axis_formatter:
             axis_formatter(ax.xaxis, ax.yaxis)
@@ -41,7 +41,7 @@ def plot_latent(param1, param2, activation, filename=None,
         act = activation[:, i]
 
         if method == 'scatter':
-            ax.scatter(param1, param2, act, c=act)
+            ax.scatter(param1, param2, act, c=act, cmap='magma')
 
         elif method == 'surface':
             ax.plot_trisurf(param1, param2, act, cmap='magma')
