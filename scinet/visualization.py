@@ -9,34 +9,35 @@ def plot_loss(losses, filename=None):
     ax.set_title("Training Loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
-    ax.set_aspect('equal')
 
     ax.plot(range(len(losses)), losses, color='blue')
 
     if filename:
-        plt.savefig(filename)
+        fig.savefig(filename)
 
-    plt.show()
+    return fig, ax
 
 
-def plot_latent(latent1, latent2, activation, filename=None):
+def plot_latent(param1, param2, activation, filename=None):
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(121, projection='3d')
-    ax2 = fig.add_subplot(122, projection='3d')
+    fig_height = 4
+    fig_width = 4.5
+    num_activations = activation.shape[-1]
 
-    for i, ax in enumerate((ax1, ax2)):
+    fig = plt.figure(figsize=(num_activations * fig_width, fig_height))
+
+    for i in range(num_activations):
+        ax = fig.add_subplot(1, num_activations, i + 1, projection='3d')
 
         ax.set_title(f'Latent neuron #{i+1}')
-        ax.set_xlabel('Latent_1')
-        ax.set_ylabel('Latent_2')
+        ax.set_xlabel('Parameter 1')
+        ax.set_ylabel('Parameter 2')
         ax.set_zlabel('Activation')
 
         act = activation[:, i]
-
-        ax.scatter(latent1, latent2, act, c=act)
+        ax.scatter(param1, param2, act, c=act)
 
     if filename:
-        plt.savefig(filename)
+        fig.savefig(filename)
 
-    plt.show()
+    return fig, fig.axes

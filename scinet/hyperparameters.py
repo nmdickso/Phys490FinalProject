@@ -23,3 +23,5 @@ class Hyperparameters:
 
         self.optimizer = optim.Adam
         self.leadingLoss = nn.MSELoss
+
+        self.annealEpoch = None
