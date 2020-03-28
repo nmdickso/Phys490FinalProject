@@ -273,7 +273,9 @@ if __name__ == '__main__':
     del_t = args.del_t
 
     batch_size = args.b
-    epochs = range(args.E) if not args.verbose else tqdm.tqdm(range(25))
+    epochs = tqdm.tqdm(range(args.E), disable=(not args.verbose),
+                       bar_format="{l_bar}{bar}| Epoch {n_fmt}/{total_fmt} ["
+                                  "{elapsed}<{remaining}, {rate_fmt}{postfix}]")
 
     model = TimeEvolvedScinet(hyp)
 
@@ -290,6 +292,9 @@ if __name__ == '__main__':
         )).float()
 
         loss.append(model.train(obs, batch_size))
+
+        if args.verbose:
+            epochs.set_description_str(f"loss: {loss[-1]:.2f}")
 
     if args.plot_loss:
         plt.plot(loss)
