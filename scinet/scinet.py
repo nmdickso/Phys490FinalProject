@@ -50,11 +50,20 @@ class Scinet(nn.Module):
         self.leadingLoss = hyp.leadingLoss(reduction='sum')
         self.lossFunct = self._VAE_loss
 
+        self.trainCounter = 0
+        self.annealEpoch = hyp.annealEpoch
+
+    @property
+    def annealWeight(self):
+        if self.annealEpoch is None:
+            return 1
+        return min(1, self.trainCounter / self.annealEpoch)
+
     def _VAE_loss(self, mu, sig, X_rec, X):
         leading = self.leadingLoss(X_rec, X)
         std = torch.exp(sig.mul_(0.5))
         D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
-        return leading - D_KL.sum()
+        return leading - self.annealWeight * D_KL.sum()
 
     def encode(self, x):
         # Pass through encoder layers
@@ -123,6 +132,7 @@ class Scinet(nn.Module):
             avgLoss += loss.item() * len(observationBatch)
 
         avgLoss /= trainSize
+        self.trainCounter += 1
 
         if verbose:
             print("Training loss:", avgLoss)

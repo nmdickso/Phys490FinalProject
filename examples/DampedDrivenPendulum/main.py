@@ -11,7 +11,7 @@ import torch
 import scinet
 import utils as u
 
-num_epochs = 300
+num_epochs = 1000
 display_epoch = 20
 learning_rate = 1e-2
 batch_size = 0.01
@@ -36,15 +36,17 @@ class DampedPendulumSolver:
         return
 
     def _load_training(self):
-        self.k, self.b, self.t, self.O = u.load_data(self.training_data)
+        self.w, self.k, self.b, self.t, self.O = u.load_data(self.training_data)
 
         self.n_obs, self.n_t = self.O.shape[0], self.t.size
 
-        self.train_k, self.test_k, self.train_b, self.test_b, \
-        self.train_O, self.test_O, self.train_Q, self.test_Q, \
-        self.train_A, self.test_A = u.split_and_format_data(self.k,
-                                                            self.b,
-                                                            self.O)
+        self.train_w, self.test_w, self.train_k, self.test_k, \
+        self.train_b, self.test_b, self.train_O, self.test_O, \
+        self.train_Q, self.test_Q, self.train_A, \
+        self.test_A = u.split_and_format_data(self.w,
+                                              self.k,
+                                              self.b,
+                                              self.O)
         return
 
     def _set_hyperparams(self):
@@ -137,8 +139,12 @@ class DampedPendulumSolver:
         # --------------------------------------------------------------
         # Activation Plot
         # --------------------------------------------------------------
-        latentfig, latentax = scinet.plot_latent(
-            self.test_k, self.test_b, activation, filename=f"{outdir}/Activations.png")
+        latentkbfig, latentkbax = scinet.plot_latent(
+            self.test_k, self.test_b, activation, filename=f"{outdir}/Activations_kb.png")
+        latentkwfig, latentkwax = scinet.plot_latent(
+            self.test_k, self.test_w, activation, filename=f"{outdir}/Activations_kw.png")
+        latentbwfig, latentbwax = scinet.plot_latent(
+            self.test_b, self.test_w, activation, filename=f"{outdir}/Activations_bw.png")
         
         # --------------------------------------------------------------
         # Timeseries comparison
