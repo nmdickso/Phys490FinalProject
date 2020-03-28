@@ -13,8 +13,8 @@ def plot_loss(losses, filename=None):
     ax.plot(range(len(losses)), losses, color='blue')
 
     if filename:
-        plt.savefig(filename)
-    
+        fig.savefig(filename)
+
     return fig, ax
 
 
@@ -23,7 +23,7 @@ def plot_latent(param1, param2, activation, filename=None):
     fig_height = 4
     fig_width = 4.5
     num_activations = activation.shape[-1]
-    
+
     fig = plt.figure(figsize=(num_activations * fig_width, fig_height))
 
     for i in range(num_activations):
@@ -38,6 +38,6 @@ def plot_latent(param1, param2, activation, filename=None):
         ax.scatter(param1, param2, act, c=act)
 
     if filename:
-        plt.savefig(filename)
-    
-    return fig, ax
+        fig.savefig(filename)
+
+    return fig, fig.axes
