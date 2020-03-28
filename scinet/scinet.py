@@ -52,10 +52,10 @@ class Scinet(nn.Module):
 
         self.trainCounter = 0
         self.annealEpoch = hyp.annealEpoch
-        self.annealWeight = self._update_anneal_weight()
 
-    def _update_anneal_weight(self):
-        if self.annealEpoch == 0:
+    @property
+    def annealWeight(self):
+        if self.annealEpoch is None:
             return 1
         return min(1, self.trainCounter / self.annealEpoch)
 
@@ -133,7 +133,6 @@ class Scinet(nn.Module):
 
         avgLoss /= trainSize
         self.trainCounter += 1
-        self.annealWeight = self._update_anneal_weight()
 
         if verbose:
             print("Training loss:", avgLoss)
