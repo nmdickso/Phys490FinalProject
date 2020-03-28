@@ -195,9 +195,10 @@ class TimeEvolvedScinet(scinet.Scinet):
 
                 self.optimizer.step()
 
-                avgLoss += loss.item()
+                avgLoss += loss.item() / observations.shape[1]
 
-        # TODO figure out best returned loss calc for new RNN
+            self.trainCounter += 1
+
         avgLoss /= (N // batch_N)
 
         return avgLoss
@@ -253,6 +254,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', default=0.001, help="Learning rate (α)")
     parser.add_argument('-b', default=2000, help="Training batch size")
     parser.add_argument('-E', default=25, help="Number of training epochs")
+    parser.add_argument('-B', '--beta-anneal', action='store_true')
 
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--plot-loss', action='store_true', help='Show loss')
@@ -266,6 +268,8 @@ if __name__ == '__main__':
     hyp.decoderNodes[-1] = 2
     hyp.questionNodes = 0
     hyp.leadingLoss = torch.nn.MSELoss
+    if args.beta_anneal:
+        hyp.annealEpoch = 1e8
 
     N = args.N
     test_N = args.test_N
