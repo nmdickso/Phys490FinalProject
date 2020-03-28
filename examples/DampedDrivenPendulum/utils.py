@@ -7,6 +7,7 @@ def load_data(input_file):
     position = []
     spring_consts = []
     damp_consts = []
+    driving_freqs = []
 
     with open(input_file, 'r') as f:
         for ind, line in enumerate(list(f.readlines())):
@@ -15,9 +16,10 @@ def load_data(input_file):
             if ind == 0:
                 t = np.array(line)
             else:
-                spring_consts.append(line[0])
-                damp_consts.append(line[1])
-                position.append(np.array(line[2:]))
+                driving_freqs.append(line[0])
+                spring_consts.append(line[1])
+                damp_consts.append(line[2])
+                position.append(np.array(line[3:]))
 
     n_data = len(position)
     n_points = len(t)
@@ -27,13 +29,14 @@ def load_data(input_file):
         observation = np.dstack((t, tmppos))[0]
         X[ind, :, :] = observation
 
+    driving_freqs = np.array(driving_freqs)
     spring_consts = np.array(spring_consts)
     damp_consts = np.array(damp_consts)
 
-    return spring_consts, damp_consts, t, X
+    return driving_freqs, spring_consts, damp_consts, t, X
 
 
-def split_and_format_data(spring_consts, damp_consts, O):
+def split_and_format_data(driving_freqs, spring_consts, damp_consts, O):
 
     n_observations, n_points, _ = O.shape
 
@@ -66,7 +69,10 @@ def split_and_format_data(spring_consts, damp_consts, O):
     train_damp = damp_consts[train_test_bool]
     test_damp = damp_consts[~train_test_bool]
 
-    return train_spring, test_spring, train_damp, test_damp, train_O, test_O, train_Q, test_Q, train_A, test_A
+    train_freqs = driving_freqs[train_test_bool]
+    test_freqs = driving_freqs[~train_test_bool]
+
+    return train_freqs, test_freqs, train_spring, test_spring, train_damp, test_damp, train_O, test_O, train_Q, test_Q, train_A, test_A
 
 
 def predict_timeseries(model, x, t):

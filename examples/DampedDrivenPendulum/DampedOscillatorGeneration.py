@@ -12,7 +12,7 @@ DEFAULT_x0 = 1
 DEFAULT_v0 = 0
 
 
-def damped_oscillator(
+def damped_driven_oscillator(
     w,
     k,
     b,
@@ -49,7 +49,7 @@ def damped_oscillator(
 
     # Solve for all position/velocities
     for i in range(1, num_points):
-        v[i] = v[i - 1] + dt * (sin(w * t[i]) - k * x[i - 1] - b * v[i - 1])
+        v[i] = v[i - 1] + dt * (np.sin(w * t[i]) - k * x[i - 1] - b * v[i - 1])
         x[i] = x[i - 1] + dt * v[i]
 
     # Return time, position and velocity
@@ -73,11 +73,11 @@ def main(
     '''
 
     t = np.linspace(domain[0], domain[1], num_points)
+    all_w = np.linspace(*w_tup)
     all_k = np.linspace(*k_tup)
     all_b = np.linspace(*b_tup)
-    all_w = np.linspace(*w_tup)
 
-    all_kb_pairs = np.array(list(itertools.product(all_k, all_b)))
+    all_kb_pairs = np.array(list(itertools.product(all_w, all_k, all_b)))
 
     # OUTPUT FILE FORMAT:
     #   line 1: time values
@@ -86,10 +86,10 @@ def main(
         str_t = [f"{i:.6f}" for i in t]
         newline = " ".join(str_t) + "\n"
         f.write(newline)
-        for k, b in all_kb_pairs:
-            _, x, _ = damped_oscillator(k, b, domain=domain,
+        for w, k, b in all_kb_pairs:
+            _, x, _ = damped_driven_oscillator(w, k, b, domain=domain,
                                         num_points=num_points, x_0=x_0, v_0=v_0)
-            newline = [f"{k:.6f}", f"{b:.6f}"] + [f"{i:.6f}" for i in x]
+            newline = [f"{w:.6f}", f"{k:.6f}", f"{b:.6f}"] + [f"{i:.6f}" for i in x]
             newline = " ".join(newline) + "\n"
             f.write(newline)
 
@@ -171,10 +171,12 @@ if __name__ == "__main__":
     k_tup = [k_tup[0], k_tup[1], int(k_tup[2])]
     b_tup = args.b_range
     b_tup = [b_tup[0], b_tup[1], int(b_tup[2])]
+    w_tup = args.w_range
+    w_tup = [w_tup[0], w_tup[1], int(w_tup[2])]
     domain = args.domain
     num_points = args.num_points
     x_0 = args.initial_position
     v_0 = args.initial_velocity
 
-    main(output_file, k_tup, b_tup,
+    main(output_file, k_tup, b_tup, w_tup,
          domain=domain, num_points=num_points, x_0=x_0, v_0=v_0)
