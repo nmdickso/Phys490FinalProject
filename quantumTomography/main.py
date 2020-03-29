@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import torch
 from random import random
 from config import Config
 from trainer import Trainer
@@ -22,18 +23,17 @@ def getDataArray(path,hyp,shuffle=True):
 
 
 def editHyp(hyp):
-        hyp.encoderNodes=[6,100,100]
+        hyp.encoderNodes=[10,100,100]
         hyp.encoderLayers=len(hyp.encoderNodes)
         hyp.questionNodes=hyp.encoderNodes[0]
         hyp.decoderNodes=[100,100,1]
         hyp.decoderLayers=len(hyp.decoderNodes)
 
-        hyp.testSize=1000
-        hyp.trainBatchSize=1
-        hyp.testBatchSize=1
-        hyp.epochs=2
+        hyp.testSize=1
+        hyp.trainBatchSize=512
+        hyp.epochs=100
 
-        hyp.latentNodes = 2
+        hyp.latentNodes =0
 
 
 if __name__ == "__main__":
@@ -42,14 +42,16 @@ if __name__ == "__main__":
 
     hyp=Hyperparameters()
     editHyp(hyp)
-    print(hyp.encoderNodes)
-
-    trainingData,testingData=getDataArray(cfg.dataPath+"1.npy",hyp)
+    path="quantumTomography\data\dataset_Complete_1.npy"
+    trainingData,testingData=getDataArray(path,hyp)
     net=Scinet(hyp)
-    print(net.latent)
-    #trainer=Trainer(trainingData,testingData)
+    net.device=torch.device("cuda:0")
+    net.to(net.device)
+
+
+    trainer=Trainer(trainingData,testingData)
     
 
-    #trainer.trainAndTest(net,hyp)
+    trainer.trainAndTest(net,hyp)
 
     

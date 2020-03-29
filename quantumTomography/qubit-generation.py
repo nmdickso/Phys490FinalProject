@@ -1,8 +1,6 @@
 import numpy as np
 from random import uniform
 from config import Config
-from scinet import Hyperparameters
-from main import editHyp
 
 
 
@@ -31,14 +29,11 @@ def generateRandomSet(dim,numStates):
 def parameterizeQuestion(omega,vecSet):
     omega=[measureState(omega,vec) for vec in vecSet]
     return omega
-    
-
-
 
 
 class DataGen:
     def __init__(self):
-        self.psi=0
+        self.psis=[]
         self.basis=[]
         self.observations=[]
         self.questions=[]
@@ -47,59 +42,61 @@ class DataGen:
         #used to parameterize omega
         self.omegaBasis=[]
 
-
-    def generateDataSet(self,hyp,cfg):
-        dim=hyp.encoderNodes[0]-2
+    def generateDataSet(self,cfg):
         #generates psi
-        print("Generating Psi")
-        self.psi=generateRandomQubit(dim)
+        print("Generating Psis")
+        for i in range(0,cfg.dataSetLen):
+            phi=generateRandomQubit(cfg.dimHilbert)
+            self.psis.append(phi)
 
-        #generates phis
+        #generates phis (observationn basis)
         print("Generating Phis")
-        self.basis=generateRandomSet(dim,dim+2)
+        self.basis=generateRandomSet(cfg.dimHilbert,cfg.observationBasisSize)
 
         #generates observations
         print("Generating Observations")
-        for phi in self.basis:
-            measurement=measureState(self.psi,phi)
-            self.observations.append(measurement)
-        self.observations=np.array(self.observations)
+        for psi in self.psis:
+            obseravtion=[]
+            for phi in self.basis:
+                measurement=measureState(psi,phi)
+                obseravtion.append(measurement)
+            obseravtion=np.array(obseravtion)
+            self.observations.append(obseravtion)
         
         #generates omegas
         print("Generating Questions")
         for i in range(0,cfg.dataSetLen):
             #generates omegas
-            self.questions.append(generateRandomQubit(dim))
+            self.questions.append(generateRandomQubit(cfg.dimHilbert))
 
 
         #generates answers
         print("Generating Answers")
-        for question in self.questions:
-            measurement=measureState(self.psi,question)
+        for i in range(0,cfg.dataSetLen):
+            measurement=measureState(self.psis[i],self.questions[i])
             self.answers.append(np.array(measurement))
         self.answers=np.array(self.answers)
 
 
         #maps omegas onto parameterized omegas (done after finding soltuions to simplify math)
         print("Parameterizing Questions")
-        self.omegaBasis=generateRandomSet(dim,dim+2)
+        self.omegaBasis=generateRandomSet(cfg.dimHilbert,cfg.quetionBasisSize)
         for i,omega in enumerate(self.questions):
             self.questions[i]=parameterizeQuestion(omega,self.omegaBasis)
         self.questions=np.array(self.questions,dtype=float)
         
-        self.writeToFolder(cfg)
+        self.writeToFolder(cfg,"Complete")
 
-    def writeToFolder(self,cfg):
-        print("Writing to File")
+    def writeToFolder(self,cfg,label):
         sets=[]
         for i in range(0,cfg.dataSetLen):
-            dataSet=np.array((self.observations,self.questions[i],self.answers[i]))
+            dataSet=np.array((self.observations[i],self.questions[i],self.answers[i]))
             sets.append(dataSet)
         np.array(sets)
 
         i=1
         while True:
-            path=cfg.dataPath+str(i)
+            path=cfg.dataPath+'_'+label+'_'+str(i)
             print("Trying to Write",path)
             i+=1
             try:
@@ -119,7 +116,5 @@ class DataGen:
 if __name__ == "__main__":
     gen=DataGen()
     cfg=Config()
-    hyp=Hyperparameters()
-    editHyp(hyp)
-    gen.generateDataSet(hyp,cfg)
+    gen.generateDataSet(cfg)
     
