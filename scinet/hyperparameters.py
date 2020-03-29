@@ -22,4 +22,4 @@ class Hyperparameters:
         self.learningRate = 0.001
 
         self.optimizer = optim.Adam
-        self.lossFunct = nn.MSELoss
+        self.leadingLoss = nn.MSELoss
