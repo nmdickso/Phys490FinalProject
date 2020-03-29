@@ -298,7 +298,7 @@ if __name__ == '__main__':
 
     loss, out_θ, out_φ = model.test(test_θ)
 
-    visualize_sample(test_θ, test_φ, out_θ, out_φ)
+    # visualize_sample(test_θ, test_φ, out_θ, out_φ)
 
     # ----------------------------------------------------------------------
     # Fix and plot activation
