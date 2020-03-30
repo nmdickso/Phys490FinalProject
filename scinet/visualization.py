@@ -18,7 +18,8 @@ def plot_loss(losses, filename=None):
     return fig, ax
 
 
-def plot_latent(param1, param2, activation, filename=None):
+def plot_latent(param1, param2, activation, filename=None,
+                method='scatter', axlabels=[], axis_formatter=None):
 
     fig_height = 4
     fig_width = 4.5
@@ -30,12 +31,22 @@ def plot_latent(param1, param2, activation, filename=None):
         ax = fig.add_subplot(1, num_activations, i + 1, projection='3d')
 
         ax.set_title(f'Latent neuron #{i+1}')
-        ax.set_xlabel('Parameter 1')
-        ax.set_ylabel('Parameter 2')
-        ax.set_zlabel('Activation')
+        ax.set_xlabel((axlabels[0:1] or ['Parameter 1'])[0])
+        ax.set_ylabel((axlabels[1:2] or ['Parameter 2'])[0])
+        ax.set_zlabel((axlabels[2:3] or ['Activation'])[0])
+
+        if axis_formatter:
+            axis_formatter(ax.xaxis, ax.yaxis)
 
         act = activation[:, i]
-        ax.scatter(param1, param2, act, c=act)
+
+        if method == 'scatter':
+            ax.scatter(param1, param2, act, c=act, cmap='inferno')
+
+        elif method == 'surface':
+            act = act.reshape(param1.shape)
+
+            ax.plot_surface(param1, param2, act, cmap='inferno')
 
     if filename:
         fig.savefig(filename)
