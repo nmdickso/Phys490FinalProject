@@ -76,8 +76,17 @@ To extend this problem, we can pose the question: "What would happen if psi cons
 - Python 3.x
 - ``numpy``
 - ``matplotlib``
+- ``mpl_toolkits``
+- ``setuptools``
+- ``itertools``
+- ``argparse``
+- ``datetime``
+- ``random``
 - ``torch``
 - ``tqdm``
+- ``io``
+- ``os``
+- ``sys``
 
 ## Installing SciNet
 1. Clone the repository
