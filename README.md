@@ -55,8 +55,6 @@ In the 1500’s Copernicus observed the complex motion of the planets in the sky
 
 In order to simulate time evolution, a small feed-forward network is introduced after the representation, before the decoder is applied, transforming SciNet into a recurrent neural network. In the paper, it is shown that the information stored in the time-evolved latent representation corresponds to the angles of the planets as seen from the Sun, demonstrating that the simplest representation it can find is, as Copernicus discovered, the heliocentric model.
 
-#### Extending the Copernican Heliocentrism Model
-
 ### Representation of Qubits
 An interesting property of SciNet is its ability to determine properties of physical systems with no prior theoretical structure. In the case of determining the dimensionality of a Hilbert space, SciNet is given the average "measurement identical states" psi, with respect to "basis states" phi. The following question is then posed: “What is the result of a measurement of psi with respect to a random state omega?”
 
@@ -107,12 +105,12 @@ Optional Arguments:
 - `domain`: Range of time values covered
 
 ```
-python .\DampedOscillatorGeneration.py --k_range 5 10 100 --b_range 0.5 1 100 -d 0 30 -np 100  C:\Users\xxx\Desktop\Example_Folder
+python .\DampedOscillatorGeneration.py --k_range 5 10 100 --b_range 0.5 1 100 -d 0 30 -np 100 C:\Users\xxx\Desktop\Example_Folder
 ```
 
 3. To run the example itself, enter the path to where the output data was saved.
 ```
-python main.py C:\Users\xxx\Desktop\Example_Folder
+python main.py --params path\to\params --outdir path\to\savePlots C:\Users\xxx\Desktop\Example_Folder 
 ```
 
 ### Running the Heliocentrism Model
@@ -139,3 +137,10 @@ Optional Flags:
 - `--plot-loss`: Show a plot of loss over training epochs
 
 ### Running the Representation of Qubits Model
+
+To run the Representation of Qubits example:
+
+```
+python main.py --numQubits 1 --outputDir path\to\savePlots
+```
+- `numQubits` must be either the integer 1 or 2 (anything larger than this has an incredibly long runtime)
