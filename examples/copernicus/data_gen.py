@@ -77,21 +77,72 @@ def anim_orbit(φ_e, φ_m, θ_e, θ_m):
     # TODO cool little angle (shading) between planets to see plot relations
     # d = (a_e**2 + a_m**2 - 2 * a_e * a_m * np.cos(φ_m - φ_e))
 
-    anim.FuncAnimation(fig, _update_plot, φ_e.size, interval=10, blit=True)
+    anim.FuncAnimation(fig, _update_plot, φ_e.size, interval=20, blit=True)
 
     plt.show()
 
 
-def generate_orbits(N, M, del_t):
+def flatten_τ_jumps(α):
+    '''at the end of the day this is still a kinda brute force-y method,
+    there must be a mathematical way to do this
+    '''
+    # figure out where the time series may jump, ex: π to -π
+    diff = np.abs(α - np.roll(α, 1, axis=1))
+
+    # ignore the difference between the first and last elements
+    diff[:, 0] = 0
+
+    # TODO chould probably check diff again after this (like inf-loop in orig)
+    # add 2π to all elements after a large jump in the time series
+    α[np.cumsum(diff, axis=1) > 2 * np.pi] += 2 * np.pi
+
+    return α
+
+
+def flatten_angle_jumps(α):
+    '''
+    there must be a way for this to not be necessary, it's super brute-force,
+    and this is just an artifact from the θ calculations, isn't it?
+    '''
+
+    # Step 1: make α go from -pi to pi (approximately)
+    pi_modulate(α)
+
+    # Step 2: Fix jumps in 0th axis
+    while True:
+
+        diff = (np.roll(α, 1, axis=0) - α)[1:, 0]
+        jumps = np.where(np.abs(diff) > 5.)[0]
+
+        # could definitely do something here with cumsum/divison to avoid loop
+        try:
+            α[jumps[0] + 1:, :] += np.sign(diff[jumps[0]]) * 2 * np.pi
+        except IndexError:
+            break
+
+    return α
+
+
+def generate_orbits(N, M, del_t, uniform=False):
     '''
     N = N_dataset, amount of training datasets
     M = N_timeseries, amount of time evolution iterations
     del_t = amount of time (in days) for each time evolution iteration
+    uniform = generate a uniform 2π mesh rather than random initial orbits
     '''
 
     # Generate initial mean anomalies
-    φ_e0 = (2.4 * np.pi) * np.random.rand(N) - (0.2 * np.pi)
-    φ_m0 = (2. * np.pi) * np.random.rand(N)
+    if uniform:
+        space = np.linspace(0, 2 * np.pi, num=50)
+        mesh_e, mesh_m = np.meshgrid(space, space)
+        φ_e0 = np.ravel(mesh_e)
+        φ_m0 = np.ravel(mesh_m)
+
+    else:
+        φ_e0 = (2.4 * np.pi) * np.random.rand(N) - (0.2 * np.pi)
+        φ_m0 = (2. * np.pi) * np.random.rand(N)
+
+    N = φ_e0.size
 
     φ_e0 = φ_e0[:, np.newaxis].repeat(M, axis=1)
     φ_m0 = φ_m0[:, np.newaxis].repeat(M, axis=1)
@@ -112,8 +163,9 @@ def generate_orbits(N, M, del_t):
     θ_m = np.angle(cos_θ + 1j * sin_θ)
     θ_e = φ_e
 
-    # Only seems to fix but then add extra outliers to the sin solution
-    # φ_e, φ_m = pi_modulate(φ_e), pi_modulate(φ_m)
-    # θ_e, θ_m = pi_modulate(θ_e), pi_modulate(θ_m)
+    θ_m = flatten_τ_jumps(θ_m)
+
+    if uniform:
+        θ_m = flatten_angle_jumps(θ_m)
 
     return φ_e, φ_m, θ_e, θ_m

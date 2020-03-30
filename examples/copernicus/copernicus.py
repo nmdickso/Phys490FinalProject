@@ -210,7 +210,7 @@ class TimeEvolvedScinet(scinet.Scinet):
 
             avgLoss /= observations.shape[1]
 
-        # f
+        # The first elem of each row is empty as we don't decode before the RNN
         return avgLoss, model_θ[:, 1:, :], model_φ[:, 1:, :]
 
 
@@ -286,7 +286,7 @@ if __name__ == '__main__':
         plt.show()
 
     # Test
-    φ_et, φ_mt, θ_et, θ_mt = data_gen.generate_orbits(test_N, M, del_t)
+    φ_et, φ_mt, θ_et, θ_mt = data_gen.generate_orbits(test_N, M, del_t, True)
 
     test_θ = torch.from_numpy(np.concatenate(
         (θ_et[..., np.newaxis], θ_mt[..., np.newaxis]), axis=-1
@@ -300,22 +300,12 @@ if __name__ == '__main__':
 
     # visualize_sample(test_θ, test_φ, out_θ, out_φ)
 
-    # ----------------------------------------------------------------------
-    # Fix and plot activation
-    # ----------------------------------------------------------------------
-
-    last_φ_e, last_φ_m, last_φ_out = φ_et[:, -1], φ_mt[:, -1], out_φ[:, -1, :]
-
-    inds = np.where(last_φ_m >= np.sin(last_φ_m) + np.pi)
-    φ_mt[inds] = φ_mt[inds] - (2 * np.pi)
-
-    plot_kwargs = {"method": 'scatter', "axlabels": ['φ_e', 'φ_m'],
+    plot_kwargs = {"method": 'surface', "axlabels": ['φ_e', 'φ_m'],
                    "axis_formatter": _set_pi_ticks}
 
-    scinet.plot_latent(last_φ_e, last_φ_m, last_φ_out, **plot_kwargs)
+    space = np.linspace(0, 2 * np.pi, num=50)
+    mesh_e, mesh_m = np.meshgrid(space, space)
 
-    # TODO this still misses a few outliers, it's clear sin(φ)+π isn't exactly
-    #   right. maybe need to look at the data gen to see what kind of functions
-    #   maybe it should actually be based on theta
+    scinet.plot_latent(mesh_e, mesh_m, out_φ[:, -1, :], **plot_kwargs)
 
     plt.show()

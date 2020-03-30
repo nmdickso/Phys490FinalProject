@@ -41,10 +41,12 @@ def plot_latent(param1, param2, activation, filename=None,
         act = activation[:, i]
 
         if method == 'scatter':
-            ax.scatter(param1, param2, act, c=act, cmap='magma')
+            ax.scatter(param1, param2, act, c=act, cmap='inferno')
 
         elif method == 'surface':
-            ax.plot_trisurf(param1, param2, act, cmap='magma')
+            act = act.reshape(param1.shape)
+
+            ax.plot_surface(param1, param2, act, cmap='inferno')
 
     if filename:
         fig.savefig(filename)
