@@ -42,16 +42,16 @@ class DataGen:
         #used to parameterize omega
         self.omegaBasis=[]
 
-    def generateDataSet(self,cfg):
+    def generateDataSet(self,cfg,fileName,dimHilbert,obsSize,questionSize):
         #generates psi
         print("Generating Psis")
         for i in range(0,cfg.dataSetLen):
-            phi=generateRandomQubit(cfg.dimHilbert)
+            phi=generateRandomQubit(dimHilbert)
             self.psis.append(phi)
 
         #generates phis (observationn basis)
         print("Generating Phis")
-        self.basis=generateRandomSet(cfg.dimHilbert,cfg.observationBasisSize)
+        self.basis=generateRandomSet(dimHilbert,obsSize)
 
         #generates observations
         print("Generating Observations")
@@ -67,7 +67,7 @@ class DataGen:
         print("Generating Questions")
         for i in range(0,cfg.dataSetLen):
             #generates omegas
-            self.questions.append(generateRandomQubit(cfg.dimHilbert))
+            self.questions.append(generateRandomQubit(dimHilbert))
 
 
         #generates answers
@@ -80,12 +80,13 @@ class DataGen:
 
         #maps omegas onto parameterized omegas (done after finding soltuions to simplify math)
         print("Parameterizing Questions")
-        self.omegaBasis=generateRandomSet(cfg.dimHilbert,cfg.quetionBasisSize)
+        self.omegaBasis=generateRandomSet(dimHilbert,questionSize)
         for i,omega in enumerate(self.questions):
             self.questions[i]=parameterizeQuestion(omega,self.omegaBasis)
         self.questions=np.array(self.questions,dtype=float)
         
-        self.writeToFolder(cfg,"Complete")
+        path = self.writeToFolder(cfg,fileName)
+        return(path)
 
     def writeToFolder(self,cfg,label):
         sets=[]
@@ -94,13 +95,12 @@ class DataGen:
             sets.append(dataSet)
         np.array(sets)
 
-        i=1
+        i=0
         while True:
-            path=cfg.dataPath+'_'+label+'_'+str(i)
-            print("Trying to Write",path)
+            path=cfg.dataPath+label+'_'+str(i)
             i+=1
             try:
-                f=np.load(path+".npy",allow_pickle=True)
+                f=open(path+".npy")
             except:
                 np.save(path,sets)
                 break
@@ -112,6 +112,7 @@ class DataGen:
             
                 
         print("Data Written to {}".format(path))
+        return(path+'.npy')
 
 if __name__ == "__main__":
     gen=DataGen()
