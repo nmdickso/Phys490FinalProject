@@ -282,8 +282,7 @@ if __name__ == '__main__':
             epochs.set_description_str(f"loss: {loss[-1]:.2f}")
 
     if args.plot_loss:
-        plt.plot(loss)
-        plt.show()
+        scinet.plot_loss(loss)
 
     # Test
     φ_et, φ_mt, θ_et, θ_mt = data_gen.generate_orbits(test_N, M, del_t, True)
