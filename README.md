@@ -55,11 +55,18 @@ The extension of the damped pendulum takes inspiration from the Lorentz Model Os
 The extension introduces new physics to the constants, where the spring constant is the resonant frequency of the material, and the damping constant b becomes a dissipation term for energy lost (e.g. lost to heating from light).
 
 ### Copernican Heliocentrism
-In the 1500’s Copernicus observed the complex motion of the planets in the sky and postulated a heliocentric model as the simplest representation of the solar system. To investigate the same process, we posed the problem to SciNet of predicting, based on prior positions, the angles of the Sun and Mars as seen from Earth, at a future time. That is, describing the time evolution of the planetary orbits.
+
+From the earth, other planetary bodies can be seen to take complex paths through the sky, exhibiting elements like retrograde motion.
+In the 1500’s Copernicus observed the motion of the planets in the sky and postulated that these features could be explained in the simplest representation by a heliocentric solar system, with simple circular planetary orbits.
+
+To examine this same process, we tasked Scinet with predicting, based on prior observations, the angles of the Sun and Mars as seen from Earth, as some future time. That is, describing the time evolution of the planetary orbits.
+ 
+To facilitate the time-evolution, we modify Scinet by introducing a small recurrent neural network onto the latent layers.
+The small feed-forward layers map a simple translation from r<sub>j</sub>(t<sub>i</sub>) ➡ r<sub>j</sub>(t<sub>i</sub>) + b<sub>j</sub> for each timestep, before decoding back to the known Earth-angles.
 
 ![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
 
-In order to simulate time evolution, a small feed-forward network is introduced after the representation, before the decoder is applied, transforming SciNet into a recurrent neural network. In the paper, it is shown that the information stored in the time-evolved latent representation corresponds to the angles of the planets as seen from the Sun, demonstrating that the simplest representation it can find is, as Copernicus discovered, the heliocentric model.
+In the paper, it is shown that the information stored in the time-evolved latent representation corresponds to a linear combination of the sun angles ϕ, demonstrating that the simplest representation it can find is, as Copernicus discovered, the heliocentric model.
 
 ### Representation of Qubits
 An interesting property of SciNet is its ability to determine properties of physical systems with no prior theoretical structure. In the case of determining the dimensionality of a Hilbert space, SciNet is given the average "measurement identical states" psi, with respect to "basis states" phi. The following question is then posed: “What is the result of a measurement of psi with respect to a random state omega?”
