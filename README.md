@@ -86,7 +86,7 @@ For tomographically incomplete data SciNet's error plateaus before the number of
 
 
 #### Extending the Representation of Qubits Problem
-To extend this problem, we can pose the question: "What would happen if psi consisted of an entangled 2 qubit system and a non-fixed input representing the average result of the partial measurement of the first system? Omega would be the parameterization of a partial measurement on the second system. Would SciNet respond in a similar manner to decreasing the number of latent neurons for both non-entangled and entangled partial measurements? 
+For Scinet to be a useful tool, it must be able to run in a more resonable timeframe. To accomplish this we used learning rate aneeling to drastically cut down the number of epochs required to train SciNet (down to 13.3% of whats used in the paper for the single qubit example). In addition to this The script will automatically detect if a CUDA device is avalible to make use of GPU acceleration, which is what was used to get our results.
 
 # Technical Instructions
 
