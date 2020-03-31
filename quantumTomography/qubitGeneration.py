@@ -2,9 +2,6 @@ import numpy as np
 from random import uniform
 from config import Config
 
-
-
-
 def measureState(psi,phi):
     return abs(np.inner(psi,phi))**2
 
@@ -95,7 +92,7 @@ class DataGen:
             sets.append(dataSet)
         np.array(sets)
 
-        i=0
+        i=1
         while True:
             path=cfg.dataPath+label+'_'+str(i)
             i+=1
@@ -108,9 +105,7 @@ class DataGen:
             if i==100:
                 print("Unable to Save Data")
                 break
-
-            
-                
+    
         print("Data Written to {}".format(path))
         return(path+'.npy')
 

@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import os
 import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
@@ -10,7 +11,7 @@ from scinet import Hyperparameters,Scinet
 from qubitGeneration import DataGen
 
 def createPdfLabel(numQubits):
-    return "{} _Qubit_Bar_Graph.pdf".format(numQubits)
+    return "{} _Qubit_Bar_Graph".format(numQubits)
 
 def createDataLabel(numQubits,tomComplete):
     if tomComplete:
@@ -69,6 +70,7 @@ class App:
 
         self.hyp.dataSetLen=self.dataSetLen[numQubits]
 
+#trains scinet, runs test to get MSE which is returned
     def getError(self,trainingData,testingData):
         #network setup
         net=Scinet(hyp)
@@ -87,8 +89,8 @@ class App:
         error=trainer.getMSE(net)
         return(error)
 
-#generates dataset, creates network, trains network, returns MSE on test data
-#subspacedim is only relevent for tomographically incomplete data
+#generates dataset, creates network, trains network, gets MSE on test data
+#subspacedim is only relevent for tomographically incomplete data, defualt is dummy
     def runQubitExample(self,numQubits,latentNodeList,tomComplete=True,subspaceDim=-1):
         if tomComplete:
             tomCompleteMessage="Tom. Complete"
@@ -118,7 +120,7 @@ class App:
             trainingData,testingData=getDataArray(path,self.hyp)
 
             for j,latentNodes in enumerate(latentNodeList):
-                print(">>Finding Mean Square Error for {} Qubits and {} Latent Nodes ({}), Averaging Run {}".format(numQubits,latentNodes,tomCompleteMessage,i))
+                print(">>Finding Mean Square Error for {} Qubits and {} Latent Nodes ({}), Averaging Run {}".format(numQubits,latentNodes,tomCompleteMessage,i+1))
                 self.editHyp(numQubits,obsSize,questionSize,latentNodes)
                 errorList[j]+=self.getError(trainingData,testingData)
             
@@ -136,13 +138,28 @@ class App:
         ax.set_title("{} Qubit Example".format(numQubits))
         ax.set_xticks(xs)
         ax.legend()
+        
+        #auto increments file name
+        i=1
+        label=createPdfLabel(numQubits)
+        while True:
+            path=self.cfg.pdfSavePath+label+'_'+str(i)+'.pdf'
+            i+=1
+            try:
+                f=open(path)
+            except:
+                plt.savefig(path)
+                break
             
-        plt.savefig(self.cfg.pdfSavePath+createPdfLabel(numQubits))
+            if i==100:
+                print("Unable to Save Figure, Folder Too Full")
+                break
+
         plt.show()
     
     def main(self,numQubits):
         maxLatent=2*(2**numQubits)+2
-        latentList=range(0,maxLatent)
+        latentList=range(0,1)
 
         completeError=self.runQubitExample(numQubits,latentList)
         self.QubitComp[numQubits]=completeError
@@ -159,7 +176,27 @@ class App:
 
 
 if __name__ == "__main__":
-    hyp=Hyperparameters()
+    #system args handling
+    try:
+        numQubits=int(sys.argv[1])
+    except:
+        print("Defaulting to 1 Qubit")
+        numQubits=1
+    else:
+        if numQubits<1:
+            print("Invalid Number of Qubits (must be positive int)")
+            print("Defaulting to 1 Qubit")
+            numQubits=1    
+
     cfg=Config()
+    try:
+        outputDir=str(sys.argv[2])
+    except:
+        print("Will Output to Defualt Path {}".format(cfg.pdfSavePath))
+    else:
+        cfg.pdfSavePath='quantumTomography/{}/'.format(outputDir)
+
+
+    hyp=Hyperparameters()
     app=App(hyp,cfg)
-    app.main(1)
+    app.main(numQubits)
