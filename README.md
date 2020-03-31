@@ -69,24 +69,24 @@ The small feed-forward layers map a simple translation from r<sub>j</sub>(t<sub>
 In the paper, it is shown that the information stored in the time-evolved latent representation corresponds to a linear combination of the sun angles ϕ, demonstrating that the simplest representation it can find is, as Copernicus discovered, the heliocentric model.
 
 ### Representation of Qubits
-An interesting property of SciNet is it's ability to determine properties of physical systems with no prior theoretical structure. Take the case of determining the dimensionality of a Hilbert space
+An interesting property of SciNet is its ability to determine properties of physical systems with no prior theoretical structure. Take the case of determining the dimensionality of a Hilbert space
 
-For this, SciNet is given the average measurement of arbitrary states psi with respect to some fixed basis states phi, These are our observations.
+For this, SciNet is given the average measurement of arbitrary states psi with respect to some fixed basis states phi. These are our observations.
 
-SciNet is then posed a question, “what will be the result of a measurement of psi with respect to a random state omega?”
+SciNet is then posed a question, “What will be the result of a measurement of psi with respect to a random state omega?”
 
-It is important to stress that omega, is parameterized in such a way as to not hint at any human invented structure (it's given as a set or binary projective measurements with respect to some other basis similar to the observations).
+It is important to stress that omega is parameterized in such a way as to not hint at any human invented structure (it is given as a set of binary projective measurements with respect to some other basis similar to the observations).
 
-For tomographically complete observations, SciNet’s error drops with the number of representation neurons until said number equals the degrees of freedom of the hilbert space, after which the predictions have near perfect accuracy.
+For tomographically complete observations, SciNet’s error drops with the number of representation neurons until said number equals the degrees of freedom of the Hilbert Space, after which the predictions have near perfect accuracy.
 
-For tomographically incomplete data SciNet's error plateaus before the number of representations neurons reaches the degrees of freedom of the Hilbert Space, with further representation neurons not decreasing error.
+For tomographically incomplete data, SciNet's error plateaus before the number of representation neurons reaches the degrees of freedom of the Hilbert Space, with further representation neurons not decreasing error.
 
 
 ![Qubits](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/qubits.JPG)
 
 
 #### Extending the Representation of Qubits Problem
-For Scinet to be a useful tool, it must be able to run in a more resonable timeframe. To accomplish this we used learning rate aneeling to drastically cut down the number of epochs required to train SciNet (down to 13.3% of whats used in the paper for the single qubit example). In addition to this The script will automatically detect if a CUDA device is avalible to make use of GPU acceleration, which is what was used to get our results.
+For SciNet to be a useful tool, it must be able to run in a more reasonable timeframe. To accomplish this, we used learning rate annealing to drastically cut down the number of epochs required to train SciNet (down to 13.3% of what is used in the paper for the single qubit example). In addition to this, the script will automatically detect if a CUDA device is avalible, to make use of GPU acceleration, which is what was used to get our results.
 
 # Technical Instructions
 
