@@ -48,6 +48,10 @@ There is no sensitivity of the third neuron to either of the parameters, meaning
 
 #### Extending the Dampled Pendulum Model
 
+The extension of the damped pendulum takes inspiration from the Lorentz Model Oscillator used in Optics. In this extension, a third term is present in the differential equation. This term is known as the driving force, or electric force, on the electron cloud. It is a wave (a harmonic wave in this case) which depends on some frequency w (omega) of the light causing the EM perturbation.
+
+The extension introduces new physics to the constants, where the spring constant is the resonant frequency of the material, and the damping constant b becomes a dissipation term for energy lost (e.g. lost to heating from light).
+
 ### Copernican Heliocentrism
 In the 1500’s Copernicus observed the complex motion of the planets in the sky and postulated a heliocentric model as the simplest representation of the solar system. To investigate the same process, we posed the problem to SciNet of predicting, based on prior positions, the angles of the Sun and Mars as seen from Earth, at a future time. That is, describing the time evolution of the planetary orbits.
 
@@ -92,6 +96,7 @@ To extend this problem, we can pose the question: "What would happen if psi cons
 3. Install SciNet by running `pip install -e .`
 
 ### Running the Dampled Pendulum Model
+
 1. Navigate to the DampedPendulum folder
 2. *First*, generate the data by including the following in the command line:
 - `k`: Spring Constant
