@@ -62,7 +62,7 @@ In the 1500’s Copernicus observed the motion of the planets in the sky and pos
 To examine this same process, we tasked Scinet with predicting, based on prior observations, the angles of the Sun and Mars as seen from Earth, as some future time. That is, describing the time evolution of the planetary orbits.
  
 To facilitate the time-evolution, we modify Scinet by introducing a small recurrent neural network onto the latent layers.
-The small feed-forward layers map a simple translation from r<sub>j</sub>(t<sub>i</sub>) ➡ r<sub>j</sub>(t<sub>i</sub>) + b<sub>j</sub> for each timestep, before decoding back to the known Earth-angles.
+The small feed-forward layers map a simple translation from r<sub>j</sub>(t<sub>i</sub>) → r<sub>j</sub>(t<sub>i</sub>) + b<sub>j</sub> for each timestep, before decoding back to the known Earth-angles.
 
 ![helio](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/helio.JPG)
 
