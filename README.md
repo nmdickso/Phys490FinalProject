@@ -84,7 +84,7 @@ To extend this problem, we can pose the question: "What would happen if psi cons
 
 ## Installing SciNet
 1. Clone the repository
-2. Navigate to the `scinet` folder
+2. Navigate to the cloned repository (`Phys490FinalProject`)
 3. Install SciNet by running `pip install -e .`
 
 ### Running the Dampled Pendulum Model
