@@ -22,7 +22,7 @@ This network combines both supervised and unsupervised learning. Although the ne
 
 ## Recreating SciNet
 
-SciNet is a fully connected β-VAE, meaning the weight of the KLD term in the loss function is a hyperparameter (called β). There are two differences which make SciNet unique:
+SciNet is a fully connected β-VAE, meaning there is a weighting term (β) in the KLD term in the loss function. There are two differences which make SciNet unique:
 1. β is annealed, meaning its value is increased over epochs.
 2. There is an additional input into the decoder in the form of the question neurons.
 
@@ -147,6 +147,7 @@ Optional Flags:
 To run the Representation of Qubits example:
 
 ```
-python main.py --numQubits 1 --outputDir path\to\savePlots
+python quantumTomography/main.py --numQubits 1 --outputDir path\to\savePlots
 ```
-- `numQubits` must be either the integer 1 or 2 (anything larger than this has an incredibly long runtime)
+- `numQubits` must be either the integer 1 or 2 (anything larger than this has an incredibly long runtime). The default is 1.
+- `outputDir` is optional. The plots default to saving in the `Results` folder.
