@@ -42,10 +42,10 @@ class DataGen:
         #used to parameterize omega
         self.omegaBasis=[]
 
-    def generateDataSet(self,cfg,fileName,dimHilbert,obsSize,questionSize):
+    def generateDataSet(self,cfg,dataSetLen,fileName,dimHilbert,obsSize,questionSize):
         #generates psi
         print("Generating Psis")
-        for i in range(0,cfg.dataSetLen):
+        for i in range(0,dataSetLen):
             phi=generateRandomQubit(dimHilbert)
             self.psis.append(phi)
 
@@ -65,14 +65,14 @@ class DataGen:
         
         #generates omegas
         print("Generating Questions")
-        for i in range(0,cfg.dataSetLen):
+        for i in range(0,dataSetLen):
             #generates omegas
             self.questions.append(generateRandomQubit(dimHilbert))
 
 
         #generates answers
         print("Generating Answers")
-        for i in range(0,cfg.dataSetLen):
+        for i in range(0,dataSetLen):
             measurement=measureState(self.psis[i],self.questions[i])
             self.answers.append(np.array(measurement))
         self.answers=np.array(self.answers)
@@ -85,12 +85,12 @@ class DataGen:
             self.questions[i]=parameterizeQuestion(omega,self.omegaBasis)
         self.questions=np.array(self.questions,dtype=float)
         
-        path = self.writeToFolder(cfg,fileName)
+        path = self.writeToFolder(cfg,dataSetLen,fileName)
         return(path)
 
-    def writeToFolder(self,cfg,label):
+    def writeToFolder(self,cfg,dataSetLen,label):
         sets=[]
-        for i in range(0,cfg.dataSetLen):
+        for i in range(0,dataSetLen):
             dataSet=np.array((self.observations[i],self.questions[i],self.answers[i]))
             sets.append(dataSet)
         np.array(sets)

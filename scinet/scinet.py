@@ -63,7 +63,7 @@ class Scinet(nn.Module):
         leading = self.leadingLoss(X_rec, X)
         std = torch.exp(sig.mul_(0.5))
         D_KL = 0.5 * (1 + torch.log(std.pow(2)) - mu.pow(2) - std.pow(2))
-        return leading# - self.annealWeight * D_KL.sum()
+        return leading - self.annealWeight * D_KL.sum()
 
     def encode(self, x):
         # Pass through encoder layers

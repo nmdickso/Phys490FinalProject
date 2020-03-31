@@ -8,6 +8,7 @@ from config import Config
 from trainer import Trainer
 from scinet import Hyperparameters,Scinet
 from qubitGeneration import DataGen
+
 def createPdfLabel(numQubits):
     return "{} _Qubit_Bar_Graph.pdf".format(numQubits)
 
@@ -34,7 +35,6 @@ def getDataArray(path,hyp,shuffle=True):
 class App:
     def __init__(self,hyp,cfg):
         #stores list of mse as a funciton of latent nodes, key is number of qubits
-        self.qbits=[1,2]
         self.QubitComp={1: [], 2: []}
         self.QubitIncomp={1: [], 2: []}
 
@@ -42,19 +42,24 @@ class App:
         self.observationDim={1: 10, 2: 30}
         self.questionDim={1: 10, 2: 30}
 
+        self.numEpochs={1: 40, 2:80}
+        self.encoderSize={1: 100, 2: 300}
+        self.dataSetLen={1:100000, 2:300000}
+        self.trainBatchSize={1:512, 2:1024}
+
         self.hyp=hyp
         self.cfg=cfg
     
-    def editHyp(self,obsSize,questionSize,latentNodes):
-        self.hyp.encoderNodes=[obsSize,100,100]
+    def editHyp(self,numQubits,obsSize,questionSize,latentNodes):
+        self.hyp.encoderNodes=[obsSize,self.encoderSize[numQubits],100]
         self.hyp.encoderLayers=len(hyp.encoderNodes)
         self.hyp.questionNodes=questionSize
         self.hyp.decoderNodes=[100,100,1]
         self.hyp.decoderLayers=len(hyp.decoderNodes)
 
         self.hyp.testSize=1000
-        self.hyp.trainBatchSize=512
-        self.hyp.epochs=40
+        self.hyp.trainBatchSize=self.trainBatchSize[numQubits]
+        self.hyp.epochs=self.numEpochs[numQubits]
         self.hyp.annealEpoch=self.hyp.epochs
 
         self.hyp.learningRate=1e-2
@@ -62,9 +67,12 @@ class App:
 
         self.hyp.latentNodes =latentNodes
 
+        self.hyp.dataSetLen=self.dataSetLen[numQubits]
+
     def getError(self,trainingData,testingData):
         #network setup
         net=Scinet(hyp)
+        net.lossFunct=lambda  mu, sig, X_rec, X: net.leadingLoss(X_rec,X)
         if torch.cuda.is_available():
             net.device=torch.device("cuda:0")
         else:
@@ -105,45 +113,44 @@ class App:
             #data generation
             dataLabel=createDataLabel(numQubits,tomComplete)
             dataGen=DataGen()
-
-            path=dataGen.generateDataSet(cfg,dataLabel,dimHilbert,obsSize,questionSize)
+            self.editHyp(numQubits,obsSize,questionSize,0)
+            path=dataGen.generateDataSet(cfg,self.hyp.dataSetLen,dataLabel,dimHilbert,obsSize,questionSize)
             trainingData,testingData=getDataArray(path,self.hyp)
 
             for j,latentNodes in enumerate(latentNodeList):
                 print(">>Finding Mean Square Error for {} Qubits and {} Latent Nodes ({}), Averaging Run {}".format(numQubits,latentNodes,tomCompleteMessage,i))
-                self.editHyp(obsSize,questionSize,latentNodes)
+                self.editHyp(numQubits,obsSize,questionSize,latentNodes)
                 errorList[j]+=self.getError(trainingData,testingData)
             
         errorList=[error/cfg.averaging for error in errorList]
         return errorList
     
-    def plotErrors(self):
-        for numQubits in self.qbits:
-            fig,ax=plt.subplots()
-            xs=np.arange(len(self.QubitComp[numQubits]))
-            barWidth=0.35
-            completeBars=ax.bar(xs-barWidth/2,self.QubitComp[numQubits],width=barWidth,color="blue",label="Tom. Complete")
-            IncompleteBars=ax.bar(xs+barWidth/2,self.QubitIncomp[numQubits],width=barWidth,color="orange",label="Tom. Incomplete")
-            ax.set_xlabel("Number of Latent Neurons")
-            ax.set_ylabel("Prediction Mean Square Error")
-            ax.set_title("One Qubit Example")
-            ax.set_xticks(xs)
-            ax.legend()
+    def plotErrors(self,numQubits):
+        fig,ax=plt.subplots()
+        xs=np.arange(len(self.QubitComp[numQubits]))
+        barWidth=0.35
+        completeBars=ax.bar(xs-barWidth/2,self.QubitComp[numQubits],width=barWidth,color="blue",label="Tom. Complete")
+        IncompleteBars=ax.bar(xs+barWidth/2,self.QubitIncomp[numQubits],width=barWidth,color="orange",label="Tom. Incomplete")
+        ax.set_xlabel("Number of Latent Neurons")
+        ax.set_ylabel("Prediction Mean Square Error")
+        ax.set_title("{} Qubit Example".format(numQubits))
+        ax.set_xticks(xs)
+        ax.legend()
             
-            plt.savefig(self.cfg.pdfSavePath+createPdfLabel(numQubits))
-            plt.show()
+        plt.savefig(self.cfg.pdfSavePath+createPdfLabel(numQubits))
+        plt.show()
     
-    def main(self):
-        for numQubits in self.qbits:
-            latentList=range(0,2*(2**numQubits)+2)
+    def main(self,numQubits):
+        maxLatent=2*(2**numQubits)+2
+        latentList=range(0,maxLatent)
 
-            completeError=self.runQubitExample(numQubits,latentList)
-            self.QubitComp[numQubits]=completeError
+        completeError=self.runQubitExample(numQubits,latentList)
+        self.QubitComp[numQubits]=completeError
 
-            incompleteError=self.runQubitExample(numQubits,latentList,False,2)
-            self.QubitIncomp[numQubits].append(incompleteError)
+        incompleteError=self.runQubitExample(numQubits,latentList,False,2)
+        self.QubitIncomp[numQubits]=incompleteError
 
-        self.plotErrors()
+        self.plotErrors(numQubits)
 
 
 
@@ -155,4 +162,4 @@ if __name__ == "__main__":
     hyp=Hyperparameters()
     cfg=Config()
     app=App(hyp,cfg)
-    app.main()
+    app.main(1)
