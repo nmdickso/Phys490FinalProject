@@ -22,9 +22,10 @@ This network combines both supervised and unsupervised learning. Although the ne
 
 ## Recreating SciNet
 
-SciNet is a fully connected β-VAE, meaning there is a weighting term (β) in the KLD term in the loss function. There are two differences which make SciNet unique:
+SciNet is a fully connected Variational Auto Encoder (VAE), with a weighting term (β) in the KLD term in the loss function. There are two differences which make SciNet unique from a standard VAE:
+
 1. β is annealed, meaning its value is increased over epochs.
-2. There is an additional input into the decoder in the form of the question neurons.
+2. There is an additional input into the decoder with the latent layer in the form of the question neurons.
 
 The only complexity in recreating this network pertains to the question neuron. This is done by concatenating the output of the latent layer with the question neurons, all of which is then passed through the decoder.
 
@@ -36,9 +37,9 @@ The time evolution of the damped pendulum system is given by the following diffe
 
 The mass of the pendulum is denoted by *m*, the spring constant by *k*, and the damping factor by *b*. Only *k* and *b* are relevant here, as *m* can simply be absorbed into them. The authors of the paper created the SciNet structure with three latent neurons.
 
-The network is given position timeseries data of a damped pendulum, as the training observations. The question posed to the network is: “Where would the pendulum be at time *t*, outside the observation timeseries?”
+The network is given position timeseries data of a damped pendulum, as the training observations. The question posed to the network is: “Where would the pendulum be at time *t*?”
 
-As can be seen in the position-time graph below, the network performs quite well, with a root mean squared accuracy of less than 2%.
+As can be seen in the position-time graph below, the network performs quite well for the authors, with a root mean squared accuracy of less than 2%.
 
 ![pendulum](https://github.com/nmdickso/Phys490FinalProject/blob/veronica/images/pendulum.JPG)
 
