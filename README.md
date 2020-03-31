@@ -14,7 +14,7 @@ A physicists reasoning can be broken into four parts, visualized in figure (a).
 
 # SciNet
 
-The neural network structure *SciNet* was recreated in PyTorch. As seen in figure (b) below, the observations are encoded as real parameters, and are fed to an encoder (a feed-forwward neural network). The encoder compresses the data into a latent representation. The question is encoded in N real parameters, which together with the latent representation are fed to the decoder network to generate an answer. 
+The neural network structure *SciNet* was recreated in PyTorch. As seen in figure (b) below, the observations are encoded as real parameters, and are fed to an encoder (a feed-forward neural network). The encoder compresses the data into a latent representation. The question is encoded in N real parameters, which together with the latent representation are fed to the decoder network to generate an answer. 
 
 This network combines both supervised and unsupervised learning. Although the network is trained using a supervised method, we’re interested in the latent representation itself which is trained in an unsupervised way.
 
@@ -22,10 +22,11 @@ This network combines both supervised and unsupervised learning. Although the ne
 
 ## Recreating SciNet
 
-SciNet is a simply-connected neural network with a bottleneck and an additional input on one of its hidden layers. The question neuron is done by concatenating the output of the layer that comes before the latent layer with the question neuron(s), which is then be passed to the first layer of the decoder (done in the forward function).
+SciNet is a fully connected β-VAE, meaning the weight of the KLD term in the loss function is a hyperparameter (called β). There are two differences which make SciNet unique:
+1. β is annealed, meaning its value is increased over epochs.
+2. There is an additional input into the decoder in the form of the question neurons.
 
-For the loss function and optimizer, a few choices were compared before settling with mean square loss and adam, respectively.
-
+The only complexity in recreating this network pertains to the question neuron. This is done by concatenating the output of the latent layer with the question neurons, all of which is then passed through the decoder.
 
 ## Examples
 ### Damped Pendulum
