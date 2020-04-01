@@ -11,10 +11,12 @@ from qubitGeneration import DataGen
 
 
 def createPdfLabel(numQubits):
+    '''Output pdf file label generator'''
     return "{} _Qubit_Bar_Graph".format(numQubits)
 
 
 def createDataLabel(numQubits, tomComplete):
+    '''Data file label generator'''
     if tomComplete:
         label = "{}_Qubit_TomComplete_Data".format(numQubits)
     else:
@@ -23,6 +25,8 @@ def createDataLabel(numQubits, tomComplete):
 
 
 def getDataArray(path, hyp, shuffle=True):
+    '''Load the generated data file into training and testing datasets'''
+
     print("Loading Data")
     data = np.load(path, allow_pickle=True)
     if shuffle:
@@ -35,21 +39,33 @@ def getDataArray(path, hyp, shuffle=True):
 
 
 def generateNet(hyp):
-        # network setup
-        net = Scinet(hyp)
-        net.lossFunct = lambda mu, sig, X_rec, X: net.leadingLoss(X_rec, X)
-        if torch.cuda.is_available():
-            net.device = torch.device("cuda:0")
-        else:
-            net.device = torch.device("cpu")
-        net.to(net.device)
+    '''Generate and setup Scinet network with given `hyp`'''
 
-        schedule_args = (net.optimizer, hyp.epochs, hyp.finalLr)
-        net.scheduler = optim.lr_scheduler.CosineAnnealingLR(*schedule_args)
-        return net
+    net = Scinet(hyp)
+    net.lossFunct = lambda mu, sig, X_rec, X: net.leadingLoss(X_rec, X)
+    if torch.cuda.is_available():
+        net.device = torch.device("cuda:0")
+    else:
+        net.device = torch.device("cpu")
+    net.to(net.device)
+
+    schedule_args = (net.optimizer, hyp.epochs, hyp.finalLr)
+    net.scheduler = optim.lr_scheduler.CosineAnnealingLR(*schedule_args)
+    return net
 
 
 class App:
+    '''Main container for Qubit examples
+
+    Parameters
+    ----------
+    hyp : hyperparameters.Hyperparameters
+        Hyperparameters object guiding the setup of the network
+
+    cfg : config.Config
+        Config object containing data and results paths
+    '''
+
     def __init__(self, hyp, cfg):
         # stores list of mse as a funciton of latent nodes,
         #   key is number of qubits
@@ -70,6 +86,7 @@ class App:
         self.cfg = cfg
 
     def editHyp(self, numQubits, obsSize, questionSize, latentNodes):
+        '''Setup hyperparameters for network creation'''
         self.hyp.encoderNodes = [obsSize, self.encoderSize[numQubits], 100]
         self.hyp.encoderLayers = len(hyp.encoderNodes)
         self.hyp.questionNodes = questionSize
@@ -89,7 +106,7 @@ class App:
         self.hyp.dataSetLen = self.dataSetLen[numQubits]
 
     def getError(self, trainingData, testingData):
-        # trains scinet, runs test to get MSE which is returned
+        '''trains scinet, runs test to get MSE which is returned'''
         net = generateNet(self.hyp)
 
         # training and testing for MSE
@@ -101,10 +118,26 @@ class App:
 
     def runQubitExample(self, numQubits, latentNodeList,
                         tomComplete=True, subspaceDim=-1):
-        # generates dataset, creates network, trains network,
-        #   gets MSE on test data
-        #   subspacedim is only relevent for tomographically incomplete data,
-        #   defualt is dummy
+        '''Execute stack on this example
+
+        Generate dataset, create and train network, then compute
+        Mean Squared Error on test data.
+
+        Parameters
+        ----------
+        numQubits : int
+            Number of qubits
+
+        latentNodeList : listof int
+            A list containing the various number of latent nodes to successively
+            run the network over
+
+        tomComplete: bool
+            Whether the data is tomographically complete or not
+
+        subspacedim : int
+            If `tomComplete` is True, number of observation nodes for network
+        '''
 
         if tomComplete:
             tomCompleteMessage = "Tom. Complete"
@@ -145,6 +178,7 @@ class App:
         return errorList
 
     def plotErrors(self, numQubits):
+        '''Plot and save bar chart of error based on number of latent neurons'''
         fig, ax = plt.subplots()
         xs = np.arange(len(self.QubitComp[numQubits]))
         barWidth = 0.35
@@ -182,6 +216,13 @@ class App:
         plt.show()
 
     def main(self, numQubits):
+        '''Main example driver
+
+        Parameters
+        ----------
+        numQubits : int
+            Number of qubits
+        '''
         maxLatent = 2 * (2**numQubits) + 2
         latentList = range(0, maxLatent)
 
@@ -195,7 +236,11 @@ class App:
 
 
 if __name__ == "__main__":
-    # system args handling
+
+    # ----------------------------------------------------------------------
+    # Parse command line arguments
+    # ----------------------------------------------------------------------
+
     try:
         numQubits = int(sys.argv[1])
     except (ValueError, IndexError):
@@ -214,6 +259,10 @@ if __name__ == "__main__":
         print("Will Output to Defualt Path {}".format(cfg.pdfSavePath))
     else:
         cfg.pdfSavePath = 'quantumTomography/{}/'.format(outputDir)
+
+    # ----------------------------------------------------------------------
+    # Run example
+    # ----------------------------------------------------------------------
 
     hyp = Hyperparameters()
     app = App(hyp, cfg)
