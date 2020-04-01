@@ -143,7 +143,7 @@ def generate_orbits(N, M, del_t, uniform=False):
     del_t : int
         Amount of time, in days, for each time evolution iteration
 
-    uniform : bool
+    uniform : bool, optional
         Whether to generate the initial mean anomalies on a uniform [0, 2π]
         grid, or completely randomly
 

@@ -195,7 +195,7 @@ class TimeEvolvedScinet(scinet.Scinet):
         x : torch.Tensor
             Input training dataset batch
 
-        first_pass : bool
+        first_pass : bool, optional
             Whether this iteration of training requires encoding or only time
             evolution and decoding. Corresponds to the training of the RNN
             layers
