@@ -24,7 +24,6 @@ def getDataArray(path,hyp,shuffle=True):
     print("Loading Data")
     data=np.load(path,allow_pickle=True)
     if shuffle:
-        print("Shuffling Data")
         np.random.shuffle(data)
 
     trainingData=data[0:-hyp.testSize]
@@ -32,6 +31,18 @@ def getDataArray(path,hyp,shuffle=True):
 
     return(trainingData,testingData)
 
+def generateNet(hyp):
+        #network setup
+        net=Scinet(hyp)
+        net.lossFunct=lambda  mu, sig, X_rec, X: net.leadingLoss(X_rec,X)
+        if torch.cuda.is_available():
+            net.device=torch.device("cuda:0")
+        else:
+            net.device=torch.device("cpu")
+        net.to(net.device)
+
+        net.scheduler=optim.lr_scheduler.CosineAnnealingLR(net.optimizer,hyp.epochs,hyp.finalLr)
+        return net
 
 class App:
     def __init__(self,hyp,cfg):
@@ -43,10 +54,10 @@ class App:
         self.observationDim={1: 10, 2: 30}
         self.questionDim={1: 10, 2: 30}
 
-        self.numEpochs={1: 40, 2:80}
+        self.numEpochs={1: 40, 2: 80}
         self.encoderSize={1: 100, 2: 300}
         self.dataSetLen={1:100000, 2:300000}
-        self.trainBatchSize={1:512, 2:1024}
+        self.trainBatchSize={1:512, 2:512}
 
         self.hyp=hyp
         self.cfg=cfg
@@ -72,21 +83,13 @@ class App:
 
 #trains scinet, runs test to get MSE which is returned
     def getError(self,trainingData,testingData):
-        #network setup
-        net=Scinet(hyp)
-        net.lossFunct=lambda  mu, sig, X_rec, X: net.leadingLoss(X_rec,X)
-        if torch.cuda.is_available():
-            net.device=torch.device("cuda:0")
-        else:
-            net.device=torch.device("cpu")
-        net.to(net.device)
-
-        net.scheduler=optim.lr_scheduler.CosineAnnealingLR(net.optimizer,self.hyp.epochs,self.hyp.finalLr)
+        net=generateNet(self.hyp)
 
         #training and testing for MSE
         trainer=Trainer(trainingData,testingData)
         trainer.train(net,hyp)
         error=trainer.getMSE(net)
+        print("MSE: ",error)
         return(error)
 
 #generates dataset, creates network, trains network, gets MSE on test data
@@ -120,7 +123,7 @@ class App:
             trainingData,testingData=getDataArray(path,self.hyp)
 
             for j,latentNodes in enumerate(latentNodeList):
-                print(">>Finding Mean Square Error for {} Qubits and {} Latent Nodes ({}), Averaging Run {}".format(numQubits,latentNodes,tomCompleteMessage,i+1))
+                print("\n>>Finding Mean Square Error for {} Qubits and {} Latent Nodes ({}), Averaging Run {}".format(numQubits,latentNodes,tomCompleteMessage,i+1))
                 self.editHyp(numQubits,obsSize,questionSize,latentNodes)
                 errorList[j]+=self.getError(trainingData,testingData)
             
@@ -159,7 +162,7 @@ class App:
     
     def main(self,numQubits):
         maxLatent=2*(2**numQubits)+2
-        latentList=range(0,1)
+        latentList=range(0,maxLatent)
 
         completeError=self.runQubitExample(numQubits,latentList)
         self.QubitComp[numQubits]=completeError
@@ -168,10 +171,6 @@ class App:
         self.QubitIncomp[numQubits]=incompleteError
 
         self.plotErrors(numQubits)
-
-
-
-        
 
 
 

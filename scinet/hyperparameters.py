@@ -17,11 +17,11 @@ class Hyperparameters:
         self.decoderLayers = len(self.decoderNodes)
         self.answerNodes = 1
 
-        # Note learning rate and batch size must not be too high due to
-        # dead relu problems
         self.learningRate = 0.001
 
         self.optimizer = optim.Adam
         self.leadingLoss = nn.MSELoss
 
         self.annealEpoch = None
+
+

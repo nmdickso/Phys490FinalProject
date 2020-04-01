@@ -40,18 +40,17 @@ class DataGen:
         self.omegaBasis=[]
 
     def generateDataSet(self,cfg,dataSetLen,fileName,dimHilbert,obsSize,questionSize):
+        print("\n>>Generating New Dataset")
+
         #generates psi
-        print("Generating Psis")
         for i in range(0,dataSetLen):
             phi=generateRandomQubit(dimHilbert)
             self.psis.append(phi)
 
         #generates phis (observationn basis)
-        print("Generating Phis")
         self.basis=generateRandomSet(dimHilbert,obsSize)
 
         #generates observations
-        print("Generating Observations")
         for psi in self.psis:
             obseravtion=[]
             for phi in self.basis:
@@ -61,14 +60,12 @@ class DataGen:
             self.observations.append(obseravtion)
         
         #generates omegas
-        print("Generating Questions")
         for i in range(0,dataSetLen):
             #generates omegas
             self.questions.append(generateRandomQubit(dimHilbert))
 
 
         #generates answers
-        print("Generating Answers")
         for i in range(0,dataSetLen):
             measurement=measureState(self.psis[i],self.questions[i])
             self.answers.append(np.array(measurement))
@@ -76,7 +73,6 @@ class DataGen:
 
 
         #maps omegas onto parameterized omegas (done after finding soltuions to simplify math)
-        print("Parameterizing Questions")
         self.omegaBasis=generateRandomSet(dimHilbert,questionSize)
         for i,omega in enumerate(self.questions):
             self.questions[i]=parameterizeQuestion(omega,self.omegaBasis)
