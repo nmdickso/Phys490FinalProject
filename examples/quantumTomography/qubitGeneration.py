@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from random import uniform
 from config import Config
 
@@ -88,6 +89,10 @@ class DataGen:
             sets.append(dataSet)
         np.array(sets)
 
+        #makes results folder if it does not exist
+        if not os.path.exists(cfg.dataPath[0:-1]):
+            os.mkdir(cfg.dataPath[0:-1])
+        
         i=1
         while True:
             path=cfg.dataPath+label+'_'+str(i)

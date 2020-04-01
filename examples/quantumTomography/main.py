@@ -142,6 +142,9 @@ class App:
         ax.set_xticks(xs)
         ax.legend()
         
+        #makes results folder if it does not exist
+        if not os.path.exists(self.cfg.pdfSavePath[0:-1]):
+            os.mkdir(self.cfg.pdfSavePath[0:-1])
         #auto increments file name
         i=1
         label=createPdfLabel(numQubits)

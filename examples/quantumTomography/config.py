@@ -1,8 +1,8 @@
 class Config:
     def __init__(self):
-        self.dataPath="quantumTomography/data/"
+        self.dataPath="examples/quantumTomography/data/"
         #default path
-        self.pdfSavePath="quantumTomography/Results/"
+        self.pdfSavePath="examples/quantumTomography/Results/"
 
         #trains and finds scinet MSE this many per bar in the bargraph and takes the average
         self.averaging=3
