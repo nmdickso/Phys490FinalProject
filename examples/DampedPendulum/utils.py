@@ -72,7 +72,8 @@ def load_data(input_file):
     train_A = torch.from_numpy(train_A).float()
     test_A = torch.from_numpy(test_A).float()
 
-    return train_k, test_k, train_b, test_b, train_O, test_O, train_Q, test_Q, train_A, test_A, t
+    return train_k, test_k, train_b, test_b, train_O, test_O, train_Q, test_Q, \
+        train_A, test_A, t
 
 
 def split_and_format_data(spring_consts, damp_consts, O):
@@ -108,7 +109,8 @@ def split_and_format_data(spring_consts, damp_consts, O):
     train_damp = damp_consts[train_test_bool]
     test_damp = damp_consts[~train_test_bool]
 
-    return train_spring, test_spring, train_damp, test_damp, train_O, test_O, train_Q, test_Q, train_A, test_A
+    return train_spring, test_spring, train_damp, test_damp, train_O, test_O, \
+        train_Q, test_Q, train_A, test_A
 
 
 def predict_timeseries(model, x, t):
