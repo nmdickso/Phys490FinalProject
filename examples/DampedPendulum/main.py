@@ -1,5 +1,6 @@
 # Standard library imports
 import argparse
+import json
 import datetime as dt
 
 # Additional dependancies
@@ -11,19 +12,12 @@ import torch
 import scinet
 import utils as u
 
-num_epochs = 300
-display_epoch = 20
-learning_rate = 1e-2
-batch_size = 0.01
+DEFAULT_PARAMS = "./params/params.json"
 
 
 class DampedPendulumSolver:
     def __init__(self, input_file, learning_rate):
-        self.num_epochs = num_epochs
-        self.display_epoch = display_epoch
         self.learning_rate = learning_rate
-        self.batch_size = batch_size
-
         self.training_data = input_file
         self._load_training()
 
@@ -36,15 +30,17 @@ class DampedPendulumSolver:
         return
 
     def _load_training(self):
-        self.k, self.b, self.t, self.O = u.load_data(self.training_data)
+        # self.k, self.b, self.t, self.O = u.load_data(self.training_data)
 
-        self.n_obs, self.n_t = self.O.shape[0], self.t.size
+        # self.n_obs, self.n_t = self.O.shape[0], self.t.size
 
         self.train_k, self.test_k, self.train_b, self.test_b, \
         self.train_O, self.test_O, self.train_Q, self.test_Q, \
-        self.train_A, self.test_A = u.split_and_format_data(self.k,
-                                                            self.b,
-                                                            self.O)
+        self.train_A, self.test_A, self.t = u.load_data(self.training_data)
+
+        self.n_train = self.train_O.shape[0]
+        self.n_t = self.t.size
+
         return
 
     def _set_hyperparams(self):
@@ -61,7 +57,7 @@ class DampedPendulumSolver:
         params.decoderLayers = len(params.decoderNodes)
         # Set learning rate
         params.learningRate = self.learning_rate
-        params.annealEpoch = 1e8
+        params.annealEpoch = 1e30
         self.hyp = params
         return
 
@@ -69,8 +65,8 @@ class DampedPendulumSolver:
         print("\nTraining Model...")
         start = dt.datetime.now()
 
-        batch_length = int(np.ceil(batch_size * self.n_obs))
-        train_inds = np.array(list(range(self.train_O.shape[0])))
+        batch_length = int(np.ceil(batch_size * self.n_train))
+        train_inds = np.array(list(range(self.n_train)))
 
         batched_epochs = int(np.ceil(num_epochs / batch_size))
 
@@ -112,7 +108,7 @@ class DampedPendulumSolver:
         # run test
         avgLoss, activation = self.test()
         model_A = self.model.forward(self.test_O, self.test_Q)[-1].detach().numpy().ravel()
-        RMSError_all = ((self.test_A - model_A)**2).mean()
+        RMSError_all = np.sqrt(((self.test_A - model_A)**2).mean()) * 100
 
         # --------------------------------------------------------------
         # General position comparison for all test
@@ -121,12 +117,12 @@ class DampedPendulumSolver:
 
         one_one_ax.plot([-1, 1], [-1, 1], 'k-')
         test_A = self.test_A.numpy().ravel()
-        one_one_ax.plot(test_A, model_A, 'bo', label=f"RMS Error: {RMSError_all:.5f}")
+        one_one_ax.plot(test_A, model_A, 'bo', label=f"RMS Error: {RMSError_all:.5f}%")
         one_one_ax.set_xlabel("Simulated Position")
         one_one_ax.set_ylabel("SciNet Position")
         one_one_ax.set_aspect('equal')
         one_one_ax.legend()
-        one_one_fig.savefig("one_one.png")
+        one_one_fig.savefig(f"{outdir}/one_one.png")
 
         # --------------------------------------------------------------
         # Loss plot
@@ -137,8 +133,13 @@ class DampedPendulumSolver:
         # --------------------------------------------------------------
         # Activation Plot
         # --------------------------------------------------------------
+        test_k_len = np.unique(self.test_k.numpy()).size
+        test_b_len = np.unique(self.test_b.numpy()).size
+        test_k = self.test_k.numpy().reshape(test_k_len, test_b_len)
+        test_b = self.test_b.numpy().reshape(test_k_len, test_b_len)
+
         latentfig, latentax = scinet.plot_latent(
-            self.test_k, self.test_b, activation, filename=f"{outdir}/Activations.png")
+            test_k, test_b, activation.numpy(), method='surface', filename=f"{outdir}/Activations.png", axlabels=["k", "b"])
         
         # --------------------------------------------------------------
         # Timeseries comparison
@@ -153,19 +154,20 @@ class DampedPendulumSolver:
         posax.plot(self.t, predicted_x, 'bo', label="Predicted Position")
         posax.set_xlabel("Time (s)")
         posax.set_ylabel("Vertical Position (m)")
-        posax.set_title(f"RMS Error: {((predicted_x - true_x)**2).mean()}")
+        posax.set_title(f"RMS Error: {np.sqrt(((predicted_x - true_x)**2).mean())}")
         posax.grid()
         posax.legend()
-        posfig.savefig("PositonTimeseries.png")
+        posfig.savefig(f"{outdir}/PositonTimeseries.png")
 
         return
 
 
-def main(input_file):
+def main(input_file, params=DEFAULT_PARAMS, outdir='.'):
 
-    nn = DampedPendulumSolver(input_file, learning_rate)
-    nn.train(num_epochs, display_epoch, batch_size)
-    nn.visualize()
+    params = json.load(open(params, 'r'))
+    nn = DampedPendulumSolver(input_file, params['learning_rate'])
+    nn.train(params['num_epochs'], params['display_epoch'], params['batch_size'])
+    nn.visualize(outdir=outdir)
 
     plt.show()
 
@@ -175,7 +177,8 @@ def main(input_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""
-            DESCRIPTION
+            Program to Apply SciNet to a series of Damped Pendulum Data
+            And monitor what it learns
         """
     )
     parser.add_argument(
@@ -183,6 +186,20 @@ if __name__ == "__main__":
         type=str,
         help="Input training/testing set (specially formatted)"
     )
+    parser.add_argument(
+        '--params',
+        type=str,
+        help="Path to input parameters file",
+        required=False,
+        default=DEFAULT_PARAMS
+    )
+    parser.add_argument(
+        '--outdir',
+        type=str,
+        help="Path to save output plots",
+        required=False,
+        default='.'
+    )
     args = parser.parse_args()
 
-    main(args.input_file)
+    main(args.input_file, params=args.params, outdir=args.outdir)

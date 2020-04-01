@@ -71,10 +71,15 @@ def main(
     '''
 
     t = np.linspace(domain[0], domain[1], num_points)
-    all_k = np.linspace(*k_tup)
-    all_b = np.linspace(*b_tup)
+    train_k = np.linspace(*k_tup)
+    train_b = np.linspace(*b_tup)
+    train_kb_pairs = np.array(list(itertools.product(train_k, train_b)))
 
-    all_kb_pairs = np.array(list(itertools.product(all_k, all_b)))
+    k_tup[-1] = int(np.ceil(k_tup[-1] * 0.2))
+    b_tup[-1] = int(np.ceil(b_tup[-1] * 0.2))
+    test_k = np.linspace(*k_tup)
+    test_b = np.linspace(*b_tup)
+    test_kb_pairs = np.array(list(itertools.product(test_k, test_b)))
 
     # OUTPUT FILE FORMAT:
     #   line 1: time values
@@ -83,7 +88,15 @@ def main(
         str_t = [f"{i:.6f}" for i in t]
         newline = " ".join(str_t) + "\n"
         f.write(newline)
-        for k, b in all_kb_pairs:
+        for k, b in train_kb_pairs:
+            _, x, _ = damped_oscillator(k, b, domain=domain,
+                                        num_points=num_points, x_0=x_0, v_0=v_0)
+            newline = [f"{k:.6f}", f"{b:.6f}"] + [f"{i:.6f}" for i in x]
+            newline = " ".join(newline) + "\n"
+            f.write(newline)
+
+        f.write("TEST\n")
+        for k, b in test_kb_pairs:
             _, x, _ = damped_oscillator(k, b, domain=domain,
                                         num_points=num_points, x_0=x_0, v_0=v_0)
             newline = [f"{k:.6f}", f"{b:.6f}"] + [f"{i:.6f}" for i in x]
