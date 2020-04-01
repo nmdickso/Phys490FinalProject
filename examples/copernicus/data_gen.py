@@ -10,19 +10,17 @@ a_m = 1.52366231
 
 
 def tau_modulate(α):
-    '''[0, 2π]'''
+    '''Modulate aray to [0, 2π]'''
     return (α + 2 * np.pi) % (2 * np.pi)
 
 
 def pi_modulate(α):
-    '''[-π, π]'''
+    '''Modulate aray to [-π, π]'''
     return tau_modulate(α) - np.pi
 
 
 def anim_orbit(φ_e, φ_m, θ_e, θ_m):
-    '''show an animated orbit example, of both viewpoints
-    only uses the first row of the datasets, for ease
-    '''
+    '''show an animated orbit example, of both viewpoints'''
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
 
@@ -83,16 +81,16 @@ def anim_orbit(φ_e, φ_m, θ_e, θ_m):
 
 
 def flatten_τ_jumps(α):
-    '''at the end of the day this is still a kinda brute force-y method,
-    there must be a mathematical way to do this
-    '''
+    '''Remove large jumps between time steps'''
+
     # figure out where the time series may jump, ex: π to -π
     diff = np.abs(α - np.roll(α, 1, axis=1))
 
     # ignore the difference between the first and last elements
     diff[:, 0] = 0
 
-    # TODO chould probably check diff again after this (like inf-loop in orig)
+    # TODO should probably check diff again after this (like inf-loop in paper)
+
     # add 2π to all elements after a large jump in the time series
     α[np.cumsum(diff, axis=1) > 2 * np.pi] += 2 * np.pi
 
@@ -100,21 +98,19 @@ def flatten_τ_jumps(α):
 
 
 def flatten_angle_jumps(α):
-    '''
-    there must be a way for this to not be necessary, it's super brute-force,
-    and this is just an artifact from the θ calculations, isn't it?
-    '''
+    '''Remove large jumps between orbits'''
 
-    # Step 1: make α go from -pi to pi (approximately)
+    # Make α go from -π to π
     pi_modulate(α)
 
-    # Step 2: Fix jumps in 0th axis
+    # Fix large jumps along the zeroth axis
     while True:
 
+        # Locate large jumps
         diff = (np.roll(α, 1, axis=0) - α)[1:, 0]
         jumps = np.where(np.abs(diff) > 5.)[0]
 
-        # could definitely do something here with cumsum/divison to avoid loop
+        # TODO could do something here with cumsum/divison to avoid loop
         try:
             α[jumps[0] + 1:, :] += np.sign(diff[jumps[0]]) * 2 * np.pi
         except IndexError:
@@ -124,14 +120,54 @@ def flatten_angle_jumps(α):
 
 
 def generate_orbits(N, M, del_t, uniform=False):
-    '''
-    N = N_dataset, amount of training datasets
-    M = N_timeseries, amount of time evolution iterations
-    del_t = amount of time (in days) for each time evolution iteration
-    uniform = generate a uniform 2π mesh rather than random initial orbits
+    '''Generate N simulated orbital Sun and Earth angles of Earth and Mars
+
+    Simulate, using basic orbital mechanics, the orbits of the planets
+    Earth and Mars around the Sun, and then determine, from their angles around
+    the Sun, the angles the Sun and Mars make with respect to the Earth.
+
+    The initial mean anomalies are transformed in time using the definition:
+
+    .. math::
+
+        M = M_0 + \frac{2π}{τ} * Δt
+
+    Parameters
+    ----------
+    N : int
+        Number of different datasets, i.e. orbits, to generate
+
+    M : int
+        Length of time-series, in amount of time evolution (`del_t`) iterations
+
+    del_t : int
+        Amount of time, in days, for each time evolution iteration
+
+    uniform : bool
+        Whether to generate the initial mean anomalies on a uniform [0, 2π]
+        grid, or completely randomly
+
+    Returns
+    -------
+    φ_e : numpy.ndarray
+        Array of Sun-Earth angles
+
+    φ_m : numpy.ndarray
+        Array of Sun-Mars angles
+
+    θ_e : numpy.ndarray
+        Array of Earth-Sun angles
+
+    θ_m : numpy.ndarray
+        Array of Earth-Mars angles
+
     '''
 
-    # Generate initial mean anomalies
+    # ----------------------------------------------------------------------
+    # Generate initial mean anomalies, either in a uniform [0, 2π] mesh,
+    # or randomly
+    # ----------------------------------------------------------------------
+
     if uniform:
         space = np.linspace(0, 2 * np.pi, num=50)
         mesh_e, mesh_m = np.meshgrid(space, space)
@@ -147,13 +183,18 @@ def generate_orbits(N, M, del_t, uniform=False):
     φ_e0 = φ_e0[:, np.newaxis].repeat(M, axis=1)
     φ_m0 = φ_m0[:, np.newaxis].repeat(M, axis=1)
 
-    # Compute Mean anomalies (φ)
+    # ----------------------------------------------------------------------
+    # Compute Mean anomalies (φ) as a function of the time evolution
+    # ----------------------------------------------------------------------
+
     time_series = np.arange(M)[np.newaxis, :].repeat(N, axis=0)
 
     φ_e = φ_e0 + (2 * np.pi / T_e) * (time_series * del_t)
     φ_m = φ_m0 + (2 * np.pi / T_m) * (time_series * del_t)
 
-    # Compute Earth angles
+    # ----------------------------------------------------------------------
+    # Compute Earth angles (θ)
+    # ----------------------------------------------------------------------
 
     d = (a_e**2 + a_m**2 - 2 * a_e * a_m * np.cos(φ_m - φ_e))  # cosine law
 
@@ -162,6 +203,11 @@ def generate_orbits(N, M, del_t, uniform=False):
 
     θ_m = np.angle(cos_θ + 1j * sin_θ)
     θ_e = φ_e
+
+    # ----------------------------------------------------------------------
+    # Brute-force modulate and reformat the data to remove large jumps in the
+    # time series' and datasets (i.e. when passing from π to -π)
+    # ----------------------------------------------------------------------
 
     θ_m = flatten_τ_jumps(θ_m)
 
