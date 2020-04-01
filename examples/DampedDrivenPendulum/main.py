@@ -1,5 +1,6 @@
 # Standard library imports
 import argparse
+import json
 import datetime as dt
 
 # Additional dependancies
@@ -11,19 +12,12 @@ import torch
 import scinet
 import utils as u
 
-num_epochs = 1000
-display_epoch = 20
-learning_rate = 1e-2
-batch_size = 0.01
+DEFAULT_PARAMS = "./params/params.json"
 
 
 class DampedPendulumSolver:
     def __init__(self, input_file, learning_rate):
-        self.num_epochs = num_epochs
-        self.display_epoch = display_epoch
         self.learning_rate = learning_rate
-        self.batch_size = batch_size
-
         self.training_data = input_file
         self._load_training()
 
@@ -128,7 +122,7 @@ class DampedPendulumSolver:
         one_one_ax.set_ylabel("SciNet Position")
         one_one_ax.set_aspect('equal')
         one_one_ax.legend()
-        one_one_fig.savefig("one_one.png")
+        one_one_fig.savefig(f"{outdir}/one_one.png")
 
         # --------------------------------------------------------------
         # Loss plot
@@ -140,11 +134,11 @@ class DampedPendulumSolver:
         # Activation Plot
         # --------------------------------------------------------------
         latentkbfig, latentkbax = scinet.plot_latent(
-            self.test_k, self.test_b, activation, filename=f"{outdir}/Activations_kb.png")
+            self.test_k, self.test_b, activation, filename=f"{outdir}/Activations_kb.png", axlabels=['k', 'b'])
         latentkwfig, latentkwax = scinet.plot_latent(
-            self.test_k, self.test_w, activation, filename=f"{outdir}/Activations_kw.png")
+            self.test_k, self.test_w, activation, filename=f"{outdir}/Activations_kw.png", axlabels=['k', 'w'])
         latentbwfig, latentbwax = scinet.plot_latent(
-            self.test_b, self.test_w, activation, filename=f"{outdir}/Activations_bw.png")
+            self.test_b, self.test_w, activation, filename=f"{outdir}/Activations_bw.png", axlabels=['b', 'w'])
         
         # --------------------------------------------------------------
         # Timeseries comparison
@@ -162,16 +156,17 @@ class DampedPendulumSolver:
         posax.set_title(f"RMS Error: {((predicted_x - true_x)**2).mean()}")
         posax.grid()
         posax.legend()
-        posfig.savefig("PositonTimeseries.png")
+        posfig.savefig(f"{outdir}/PositonTimeseries.png")
 
         return
 
 
-def main(input_file):
+def main(input_file, params=DEFAULT_PARAMS, outdir='.'):
 
-    nn = DampedPendulumSolver(input_file, learning_rate)
-    nn.train(num_epochs, display_epoch, batch_size)
-    nn.visualize()
+    params = json.load(open(params, 'r'))
+    nn = DampedPendulumSolver(input_file, params['learning_rate'])
+    nn.train(params['num_epochs'], params['display_epoch'], params['batch_size'])
+    nn.visualize(outdir=outdir)
 
     plt.show()
 
@@ -181,7 +176,8 @@ def main(input_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""
-            DESCRIPTION
+            Program to Apply SciNet to a series of Driven Damped Pendulum Data
+            And monitor what it learns
         """
     )
     parser.add_argument(
@@ -189,6 +185,20 @@ if __name__ == "__main__":
         type=str,
         help="Input training/testing set (specially formatted)"
     )
+    parser.add_argument(
+        '--params',
+        type=str,
+        help="Path to input parameters file",
+        required=False,
+        default=DEFAULT_PARAMS
+    )
+    parser.add_argument(
+        '--outdir',
+        type=str,
+        help="Path to save output plots",
+        required=False,
+        default='.'
+    )
     args = parser.parse_args()
 
-    main(args.input_file)
+    main(args.input_file, params=args.params, outdir=args.outdir)
