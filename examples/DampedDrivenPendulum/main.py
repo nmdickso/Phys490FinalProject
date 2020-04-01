@@ -6,7 +6,6 @@ import datetime as dt
 # Additional dependancies
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 
 # Custom libraries
 import scinet
@@ -16,6 +15,17 @@ DEFAULT_PARAMS = "./params/params.json"
 
 
 class DampedPendulumSolver:
+    '''Main container for damped driven pendulum examples
+
+    Parameters
+    ----------
+    input_file : str
+        Path to the input data file
+
+    learning_rate : float
+        Constant learning rate to be applied throughout network training
+    '''
+
     def __init__(self, input_file, learning_rate):
         self.learning_rate = learning_rate
         self.training_data = input_file
@@ -30,17 +40,15 @@ class DampedPendulumSolver:
         return
 
     def _load_training(self):
+        '''load training data from input file `training_data`'''
         self.w, self.k, self.b, self.t, self.O = u.load_data(self.training_data)
 
         self.n_obs, self.n_t = self.O.shape[0], self.t.size
 
         self.train_w, self.test_w, self.train_k, self.test_k, \
-        self.train_b, self.test_b, self.train_O, self.test_O, \
-        self.train_Q, self.test_Q, self.train_A, \
-        self.test_A = u.split_and_format_data(self.w,
-                                              self.k,
-                                              self.b,
-                                              self.O)
+            self.train_b, self.test_b, self.train_O, self.test_O, \
+            self.train_Q, self.test_Q, self.train_A, \
+            self.test_A = u.split_and_format_data(self.w, self.k, self.b, self.O)
         return
 
     def _set_hyperparams(self):
@@ -62,6 +70,28 @@ class DampedPendulumSolver:
         return
 
     def train(self, num_epochs, display_epoch, batch_size):
+        '''Network training loop
+
+        Batched training of the network over `num_epochs`
+
+        Parameters
+        ----------
+        num_epochs : int
+            Number of training epochs
+
+        display_epoch : int
+            Multiple of epochs at which to write out the current loss values
+
+        batch_size : int
+            Batch size
+
+        Returns
+        -------
+        losses : listof float
+            List of cost function values over all training. Also saved to
+            `DampedPendulumSolver.losses`
+        '''
+
         print("\nTraining Model...")
         start = dt.datetime.now()
 
@@ -83,21 +113,23 @@ class DampedPendulumSolver:
             tmp_train_Q = self.train_Q[tmp_train_inds, :]
             tmp_train_A = self.train_A[tmp_train_inds, :]
 
-            loss = self.model.train(tmp_train_O, tmp_train_Q, tmp_train_A, batch_length)
+            loss = self.model.train(tmp_train_O, tmp_train_Q, tmp_train_A,
+                                    batch_length)
             self.losses.append(loss)
 
             epoch = epoch * batch_size
             if (not (epoch) % display_epoch):
                 print(f"EPOCH: {epoch:02.0f} of {num_epochs}.\tLOSS: {loss}")
-        
+
         end = dt.datetime.now()
         time_taken = end - start
         print(f"FINAL TRAINING LOSS:\t{self.losses[-1]}")
-        print('Time: ',time_taken)
+        print('Time: ', time_taken)
 
         return self.losses
-    
+
     def test(self):
+        '''Return losses and latent activations from network testing function'''
         print("\nTesting Model...")
         test_losses, activation = self.model.test(self.test_O,
                                                   self.test_Q,
@@ -105,14 +137,26 @@ class DampedPendulumSolver:
         return test_losses, activation
 
     def visualize(self, outdir='.'):
+        '''Final network results plots
+
+        Plots of position comparisons, losses, latent activations and time
+        series comparisons given by the testing of the trained network.
+
+        Parameters
+        ----------
+        outdir : str, optional
+            Directory for saving of all plots
+        '''
+
         # run test
         avgLoss, activation = self.test()
         model_A = self.model.forward(self.test_O, self.test_Q)[-1].detach().numpy().ravel()
         RMSError_all = ((self.test_A - model_A)**2).mean()
 
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
         # General position comparison for all test
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
+
         one_one_fig, one_one_ax = plt.subplots()
 
         one_one_ax.plot([-1, 1], [-1, 1], 'k-')
@@ -124,25 +168,34 @@ class DampedPendulumSolver:
         one_one_ax.legend()
         one_one_fig.savefig(f"{outdir}/one_one.png")
 
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
         # Loss plot
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
+
         lossfig, lossax = scinet.plot_loss(
             self.losses, filename=f"{outdir}/Loss.png")
 
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
         # Activation Plot
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
+
         latentkbfig, latentkbax = scinet.plot_latent(
-            self.test_k, self.test_b, activation, filename=f"{outdir}/Activations_kb.png", axlabels=['k', 'b'])
+            self.test_k, self.test_b, activation,
+            filename=f"{outdir}/Activations_kb.png", axlabels=['k', 'b']
+        )
         latentkwfig, latentkwax = scinet.plot_latent(
-            self.test_k, self.test_w, activation, filename=f"{outdir}/Activations_kw.png", axlabels=['k', 'w'])
+            self.test_k, self.test_w, activation,
+            filename=f"{outdir}/Activations_kw.png", axlabels=['k', 'w']
+        )
         latentbwfig, latentbwax = scinet.plot_latent(
-            self.test_b, self.test_w, activation, filename=f"{outdir}/Activations_bw.png", axlabels=['b', 'w'])
-        
-        # --------------------------------------------------------------
+            self.test_b, self.test_w, activation,
+            filename=f"{outdir}/Activations_bw.png", axlabels=['b', 'w']
+        )
+
+        # ------------------------------------------------------------------
         # Timeseries comparison
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
+
         n_test = self.test_O.shape[0]
         test_ind = np.random.randint(0, n_test)
         true_x = self.test_O[test_ind].numpy()
@@ -162,6 +215,7 @@ class DampedPendulumSolver:
 
 
 def main(input_file, params=DEFAULT_PARAMS, outdir='.'):
+    '''Main example driver'''
 
     params = json.load(open(params, 'r'))
     nn = DampedPendulumSolver(input_file, params['learning_rate'])
@@ -174,6 +228,11 @@ def main(input_file, params=DEFAULT_PARAMS, outdir='.'):
 
 
 if __name__ == "__main__":
+
+    # ----------------------------------------------------------------------
+    # Parse command line arguments
+    # ----------------------------------------------------------------------
+
     parser = argparse.ArgumentParser(
         description="""
             Program to Apply SciNet to a series of Driven Damped Pendulum Data
@@ -200,5 +259,9 @@ if __name__ == "__main__":
         default='.'
     )
     args = parser.parse_args()
+
+    # ----------------------------------------------------------------------
+    # Execute main stack
+    # ----------------------------------------------------------------------
 
     main(args.input_file, params=args.params, outdir=args.outdir)
