@@ -156,4 +156,4 @@ To run the Representation of Qubits example:
 python examples/quantumTomography/main.py numQubits outputDir
 ```
 - `numQubits` must be either the integer 1 or 2 (anything larger than this has an incredibly long runtime). The default is 1.
-- `outputDir` name of a folder in quantumTomography. Is optional, The plots default to saving in the `Results` folder.
+- `outputDir` name of a folder in quantumTomography is optional. The plots default to saving in the `Results` folder.
