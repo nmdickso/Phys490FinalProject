@@ -3,6 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_loss(losses, filename=None):
+    '''Plot of network training losses over the epochs'''
 
     fig, ax = plt.subplots()
 
@@ -20,6 +21,51 @@ def plot_loss(losses, filename=None):
 
 def plot_latent(param1, param2, activation, filename=None,
                 method='scatter', axlabels=[], axis_formatter=None):
+    '''Plot of latent neuron activations
+
+    Three-dimensional plots showcasing the activation of the latent neurons
+    of a trained network with respect to some physical variables, in order
+    to examine the relation of these neurons with certain physical concepts
+
+    The number of plots in the figure is determined automatically based on the
+    dimensions of `activation`.
+
+    Parameters
+    ----------
+    param1 : numpy.ndarray
+        x-axis array of physical parameter values
+
+    param2 : numpy.ndarray
+        y-axis array of physical parameter values
+
+    activation : numpy.ndarray
+        z-axis array of latent neuron activations. Second dimension size
+        determines the number of plots to create
+
+    filename : str, optional
+        If given, will save a copy of the figure to `filename`
+
+    method : {'scatter', 'surface'}, optional
+        Whether to create scatter plots or surface plots. The 'surface' option
+        will require more careful calibration of input data.
+
+    axlabels : listof (str str str), optional
+        Labels of parameters and activation for plots. In order of
+        (param1, param2, activation)
+
+    axis_formatter : callable
+        Function which is applied on the x and y axis of each plot, meant for
+        formatting features such as labels or ticks
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Overall plot figure
+
+    axes : listof matplotlib.axes._subplots.AxesSubplot
+        List of individual plot `axes`, identical to `fig.axes`
+
+    '''
 
     fig_height = 4
     fig_width = 4.5

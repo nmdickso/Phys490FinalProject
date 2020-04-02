@@ -72,7 +72,8 @@ def split_and_format_data(driving_freqs, spring_consts, damp_consts, O):
     train_freqs = driving_freqs[train_test_bool]
     test_freqs = driving_freqs[~train_test_bool]
 
-    return train_freqs, test_freqs, train_spring, test_spring, train_damp, test_damp, train_O, test_O, train_Q, test_Q, train_A, test_A
+    return train_freqs, test_freqs, train_spring, test_spring, train_damp, \
+        test_damp, train_O, test_O, train_Q, test_Q, train_A, test_A
 
 
 def predict_timeseries(model, x, t):

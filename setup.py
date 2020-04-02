@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # Package information
 NAME = 'SciNet'
-VERSION = "0.0.2"
+VERSION = "1.0.0"
 
 DESCRIPTION = 'PHYS490 Final Project - SciNet recreation'
 with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
